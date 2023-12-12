@@ -112,3 +112,62 @@ const i = myArray.findIndex((item) => item==='blah');
 const cArray = myArray.map((item) => item + '!');       // returns array with adjustments
 return numberArray.map((item) => ({val: item}));               // transform into list of objects
 ```
+
+Destructuring Syntax (relatively new):
+```
+// for array
+const [firstName, lastName] = ['Mark', 'Wilson'];
+// for object, userName alias, no age alias
+const {name: userName, age} = {name: 'Mark', age: 10};
+```
+
+It is also possible to use destructuring syntax within functions, eg:
+```
+function storeOrder({id, currency}) { // destructuring
+  localStorage.setItem('id', id);
+  localStorage.setItem('currency', currency);
+}
+// accepts one argument of an object with id and currency properties.
+```
+
+Spread operator:
+Pulls out elements of an array and adds to a new array, It can also be
+used for objects, eg:
+```
+const mergedArray = [...firstArray, ...secondArray];
+const newObject = {
+    nationality: 'british',
+    ...userObject
+};
+```
+
+He breifly goes over control structures such as if statements and for loops:
+```
+for (const hobby of hobbies) {...}
+```
+
+It is possible to pass javascript functions as parameters:
+```
+function greeter(greeterFn) {
+    greeterFn();
+}
+greeter(() => console.log('Hi'));
+```
+You can also define and execute functions within other functions:
+```
+function init() {
+    function greet() {
+        console.log('Hi');
+    }
+    greet();
+}
+init();
+```
+
+He also covered reference vs primitive values, ie objects/arrays vs string/int/float etc,
+ie pass by refererence, pass by value etc.
+
+## SECTION 3
+---
+
+### Javascript Refresher

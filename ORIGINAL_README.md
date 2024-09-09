@@ -170,4 +170,150 @@ ie pass by refererence, pass by value etc.
 ## SECTION 3
 ---
 
-### Javascript Refresher
+When doing this course he goes over 2 ways of doing it.   Using a 
+
+The start project is located here:
+https://github.com/academind/react-complete-guide-course-resources/blob/main/attachments/03%20React%20Essentials/01-starting-project.zip
+
+I used git clone to clone the code from his git repository:
+git@github.com:academind/react-complete-guide-course-resources.git
+
+You can then install the code (only need to do once) and run it using:
+```
+npm install             yarn
+npm run dev             yarn run dev
+ctrl + c to quit.
+```
+
+This npm/yarn cheat may be useful:
+https://www.digitalocean.com/community/tutorials/nodejs-npm-yarn-cheatsheet
+```
+npm init                        yarn init
+npm run                         yarn run
+npm test                        yarn test
+npm install                     yarn
+npm install [package]           yarn add [package]
+npm uninstall [package]         yarn remove [package]
+npm update                      yarn upgrade
+```
+
+### React Essentials
+---
+
+#### JSX & React Components
+---
+
+- Components are stored in files that end with ```.jsx```
+- Components must contain a javascript function that:
+    - Begins with a capital letter
+    - Returns something that is renderable
+    - Return html markup within brackets (...)
+
+lets say you create a react function called Header, you can embed that
+component into other code using this format:
+```
+    <Header></Header>     OR
+    <Header />
+```
+
+#### Dynamic Values
+
+You can output dynamic values within a component by enclosing them within
+```{}```.   You can also add basic javascript code, but not complex code like
+for statements.
+
+#### Image
+
+To process images properly within react components, the normal path method might
+not work properly when you build and deploy the app.   You need to do two things
+to use images properly:
+
+1 - Import the image at the top of the react component.   Bit weird, but words
+within react:
+```
+import reactImage from "./assets/react-core-concepts.png";
+THIS DOESN'T WORK:
+import {reactImage} from "./assets/react-core-concepts.png";
+```
+
+2 - Use that image as a dynamic component within the source, eg:
+```
+<img src={reactImage} alt="Stylized atom" />
+```
+
+#### Props - Quite Important
+
+These are used to pass values into a component whenever it is used.   You should be
+familiar with this from Vue.   You get an argument to the component function, typically
+called props, which you then use to populate the jsx/html:
+```
+function CoreConcepts(props) {
+    return (
+        <li>
+            <img src={props.img} alt={props.title}/>
+            <h3>{props.title}</h3>
+            <p>{props.description}</p>
+        </li>
+    );
+}
+```
+
+You can then re-use this within other components in a similar manner:
+```
+    <CoreConcept
+        title="Components"
+        description="The core UI building block."
+        img={componentsImg}
+    />
+```
+
+#### Alternative Props Syntax
+
+Instead of using function blah(props) {...}, you can deconstruct an object being
+passed into the component using this:
+```
+function CoreConcepts({img, title, description}) {
+    return (
+        ...
+    );
+}
+```
+
+He also shows you how to import objects from another page into the component and
+re-use the object with react components.   It works like this:
+```
+import {CORE_CONCEPTS} from "./data";           // NOTE {} not other import
+...
+    <CoreConcept
+        title={CORE_CONCEPTS[0].title}
+        description={CORE_CONCEPTS[0].description}
+        image={CORE_CONCEPTS[0].image}
+    />
+
+    <CoreConcept {...CORE_CONCEPTS[1]} />
+    <CoreConcept {...CORE_CONCEPTS[2]} />
+    <CoreConcept {...CORE_CONCEPTS[3]} />
+```
+
+Note that you could also do this:
+```
+// In the component
+CoreConcept({ concept }) {...}
+
+// When using the component use either:
+concept.title, concept.description etc
+// OR
+const {title, description, image} = concept;
+```
+
+You can also pass values in singularly and then group those props into a single variable
+within the component, eg:
+```
+    <CoreConcept
+        title={CORE_CONCEPTS[0].title}
+        description={CORE_CONCEPTS[0].description}
+        image={CORE_CONCEPTS[0].image}
+    />
+
+    function CoreConcept({}...concept}) {...};
+```

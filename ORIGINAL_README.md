@@ -317,3 +317,140 @@ within the component, eg:
 
     function CoreConcept({}...concept}) {...};
 ```
+
+#### Best Practices: Good Project Structure
+
+    - If possible, store each component in a seperate file.
+    - Components must begin with a capital letter,
+    - Give the file the same name as the component, ended with ```.jsx```
+    - Put the components within a ```components``` directory under src.
+
+    - It is possible to split .css files into seperate files.   He does this:
+        - creates a Header directory
+        - moves the Header.jsx file and a new Header.css file into this directory.
+        - imports the Header.css file in the jsx file.
+        - PLEASE NOTE THIS CSS IS NOT SCOPED!!!
+
+#### props.children
+
+    If you have a component that has something inbetween it, you can use that inside
+    the components using the ```props.children``` property.   There is always a props
+    associated with jsx and it will always have a children property.   You can also
+    expand it using {}, eg:
+    ```
+    export default function TabButton(props) {
+        return (<button>{props.children}</button>
+    OR
+    export default function TabButton({children}) {
+        return (<button>{children}</button>
+    ```
+
+    This is called COMPONENT COMPOSITION.
+
+#### Reacting to events
+
+    You can add functions within component functions (function within function).
+
+    You then return the function to an event, eg:
+    ```
+    <button onClick={handleClick}>{children}</button>
+    NOT
+    <button onClick={handleClick()}>{children}</button>
+    ```
+
+#### Passing functions as values to props
+
+    You can pass a function into a prop and call it from within the component, eg
+
+    1 - Add a function to the parent component:
+    ```
+    function handleSelect() {
+        console.log('button clicked');
+    }
+    ```
+    2 - Pass it into the component:
+    ```
+    <TabButton onSelect={handleSelect}>Concepts</TabButton>
+    ```
+    3 - Within the component, use the prop:
+    ```
+    export default function TabButton({children, onSelect}) {
+        ...
+        <button onClick={onSelect}>{children}</button>
+    ```
+
+#### Passing arguments to these functions
+
+    Instead of doing this:
+    ```
+    ```
+    <TabButton onSelect={handleSelect}>Concepts</TabButton>
+    ```
+    Do this:
+    ```
+    <TabButton onSelect={() => handleSelect('MyString')}>Concepts</TabButton>
+    ```
+    You can then change the function in the parent component to accept an argument:
+    ```
+    function handleSelect(inputString) {...}
+    ```
+
+#### useState - hooks
+
+    When you want to have a variable that updates, you need a special hook to get the
+    component javascript to re-run.   It normally on runs once.
+    ```
+    import {useState} from "react"
+    ```
+    Then in the code you can use something like this:
+    ```
+    const [selectedTopic, setSelectedTopic] = useState("Please select a button");
+    ```
+    You would then use selectedTopic where you want the variable output:
+    ```
+    <h2>{selectedTopic}</h2>
+    ```
+    If you wanted to change the value within javascript, you would do something like:
+    ```
+    setSelectedTopic('my new input');
+    ```
+    IMPORTANT: selectedTopic doesn't update instantly, so you can't see it within the
+    react code straight after the javascript change.   The change flows through later.
+
+#### Rendering content conditionally
+
+    There are multiple ways of doing this.
+
+    1 - Use a ternary expression, eg:
+    ```
+    {!selectedTopic ? <p>Please select a topic.</p> : null}
+    ```
+    2 - Use &&
+    ```
+    {!selectedTopic && <p>Please select a topic.</p> }
+    ```
+    3 - Create a variable higher up that you assign some jsx code to, then based upon state
+    variable, change the variable to alternative jsx code.   Finally just display the variable
+    within the original jsx:
+    ```
+    {tabContent}
+    ```
+
+#### css styling
+
+    Within react, you can dynamically style classes.   It feels a bit weird, but you use the
+    ```className``` attribute rather than ```class```. eg:
+
+    ```
+    <button className={isSelected ? 'active' : undefined} onClick={onSelect}>{children}</button>
+    ```
+
+#### outputting lists
+
+    When you want to output lists, you can do this dynamically, eg:
+    ```
+    {CORE_CONCEPTS.map((conceptItem)=> <CoreConcept key={conceptItem.title} {...conceptItem} />)}
+    ```
+
+    The 'key' attribute is something specific to react.   It needs to be a value that uniquely
+    identifies the attribute.

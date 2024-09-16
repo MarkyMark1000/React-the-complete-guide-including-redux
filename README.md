@@ -25,4 +25,13 @@ npm start           yarn start
 npm test            yarn test           // runs test watcher
 npm run build       yarn build          // builds app for prod in build folder
 npm run dev         yarn dev
+npm init            yarn init
+npm run             yarn run
+npm test            yarn test
+
+Note:
+
+So far, I have found that npm works on my computer, but not my work computer.   I can copy his code
+and use ```yarn install``` followed by ```yarn run dev``` and it seems to work.
+
 ```

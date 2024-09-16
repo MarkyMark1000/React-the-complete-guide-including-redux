@@ -454,3 +454,120 @@ within the component, eg:
 
     The 'key' attribute is something specific to react.   It needs to be a value that uniquely
     identifies the attribute.
+
+#### Working with Fragments
+
+    A JSX FUNCTION MUST RETURN HTML ENCLOSED BY ONE ELEMENT, TYPICALLY <div>...</div>
+
+    This is inefficient sometimes as you render an unnecessary <div> tag.
+
+    1 - Can use fragment element, which isn't rendered on output:
+    ```
+    import {useState, Fragment} from "react";
+    ...
+    <Fragment>
+    </Fragment>
+    ```
+
+    2 - In current projects, there is a sytactically shortcut that doesn't need importing:
+    ```
+    return (
+        <>
+            ...
+        </>
+    )
+    ```
+
+##### Forwarding Props to wrapped elements
+
+    When you call a component, it can be really tedious creating an input variable for each
+    attribute that you want to set, eg id='..' name='...'.   You can use a special syntax to
+    forward all remainging props, eg:
+    ```
+    export default function Section({text, ...props}) {
+        return (
+            <section {...props}>
+                ...
+            </section>
+        )
+    ```
+
+#### Working with Multiple JSX Props
+
+    It's worth reviewing this video as it shows an important react design pattern.   He talks about
+    the situation where you have say a generic Tabs container, pass and display the chidren into
+    the container, but also want to display a menu item.   You then pass the menu jsx code into the
+    generic component using a buttons attribute, which must contain valid jsx code (it doesn't have to
+    be called buttons, this is the example he used).
+
+#### Setting component types dynamically
+
+    If you want to be able to control if a component uses say menu, ul or ol to display something,
+    you want to pass in the component type.   He shows you how to do this with this video.   Basically
+    you pass in a prop such as buttonsContainer.   You then create a variable with AN UPPER CASE FIRST
+    LETTER, eg ButtonsContainer and set it to buttonsContainer.   You can then use this within the
+    component:
+    ```
+        ButtonsContainer = buttonsContainer;
+        return (
+            <ButtonsContainer>...</ButtonsContainer>
+        );
+
+        <MyComponent buttonsContainer='main' /> or <MyComponent buttonsContainer={OtherComponent} />
+
+    ```
+
+#### Setting Default propr values
+
+    You can also set default prop values, eg:
+    ```
+    export default function Tabs({children, buttonsContainer = 'menu'}) {...}
+    ```
+
+## SECTION 4
+---
+
+#### public/ vs assets/ for images   
+
+You can store images within the public/ folcer or src/assets/.   What is the difference ?
+
+The public folder images become directly visible to the public without alteration and it is
+a good place for favicons etc.   With the src/assets/ folder images are injected into the
+code by react as it is run with some optimization and is a good place for component specific
+images.
+
+#### IMPORTANT - Best practice for updating state
+
+Within react, if a state has the value false, then you would expect the following code to
+make no change:
+```
+setIsEditing(!isEditing);
+setIsEditing(!isEditing);
+```
+
+Unfortuately this isn't the case.   When changing state, react schedules the change for the
+next time when it is available.
+
+If you want to force react to use the current state, you need to use a function when changing
+state, eg:
+```
+setIsEditing(editing => !editing);
+setIsEditing(editing => !editing);
+```
+
+#### IMPORTANT - Best practice - update state immutably.
+
+When processing something like a list, you don't want to update the list passed into the function,
+but take a copy of that list, adjust it and then return the updated list.
+To take a copy of the list of lists, he did something like this:
+```
+const updatedBoard = [...prevGameBoard.map(innerArray => [...innerArray])];
+```
+
+#### Lifting State Up
+
+This was an important concept.   You have a variable with a state in a parent component, then pass
+a function to be called into one sub-component and possibly the variable that represents the state.
+The sub component can then call the function to change the state.   The state can also be entered
+into another sub component, so you effectively have one component being able to influence another
+component.   See the video if necessary.

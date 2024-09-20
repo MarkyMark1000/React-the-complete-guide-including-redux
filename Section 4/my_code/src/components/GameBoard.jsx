@@ -1,26 +1,31 @@
-import {useState} from 'react';
-
 const initialBoardGame = [
     [null, null, null],
     [null, null, null],
     [null, null, null],
 ];
 
-export default function GameBoard({onSelectSquare, activePlayerSymbol}) {
-    const [gameBoard, setGameBoard] = useState(initialBoardGame);
+export default function GameBoard({onSelectSquare, turns}) {
 
-    console.log('gameBoard: ', gameBoard);
+    let gameBoard = initialBoardGame;
 
-    function handleSelectSquare(rowIndex, colIndex) {
-        setGameBoard((prevGameBoard) => {
-            // IMPORTANT - Take a copy of the old array
-            const updatedBoard = [...prevGameBoard.map(innerArray => [...innerArray])];
-            updatedBoard[rowIndex][colIndex] = activePlayerSymbol;
-            return updatedBoard;
-        });
+    for (const turn of turns) {
+        const {square, player} = turn;
+        const {row, col} = square;
 
-        onSelectSquare();
+        gameBoard[row][col] = player;
     }
+    // const [gameBoard, setGameBoard] = useState(initialBoardGame);
+
+    // function handleSelectSquare(rowIndex, colIndex) {
+    //     setGameBoard((prevGameBoard) => {
+    //         // IMPORTANT - Take a copy of the old array
+    //         const updatedBoard = [...prevGameBoard.map(innerArray => [...innerArray])];
+    //         updatedBoard[rowIndex][colIndex] = activePlayerSymbol;
+    //         return updatedBoard;
+    //     });
+
+    //     onSelectSquare();
+    // }
 
     return (
         <ol id="game-board">
@@ -29,7 +34,7 @@ export default function GameBoard({onSelectSquare, activePlayerSymbol}) {
                     <ol>{
                     row.map(
                         (playSymbol, colIndex) => <li key={colIndex}>
-                            <button onClick={() => handleSelectSquare(rowIndex, colIndex)}>{playSymbol}</button>
+                            <button onClick={() => onSelectSquare(rowIndex, colIndex)} disabled={playSymbol!==null}>{playSymbol}</button>
                         </li>
                     )
                 }</ol>

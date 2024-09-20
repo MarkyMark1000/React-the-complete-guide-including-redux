@@ -571,3 +571,18 @@ a function to be called into one sub-component and possibly the variable that re
 The sub component can then call the function to change the state.   The state can also be entered
 into another sub component, so you effectively have one component being able to influence another
 component.   See the video if necessary.
+
+#### IMPORTANT - Try to avoid unnecessary state menagement
+
+Try to move states to a parent component and make sure that when you update a state, you don't use
+any other state variables in the update.
+
+You then want to pass that parent state down and derive values to be used within the sub components.
+
+This concept is known as Deriving state from props.
+
+---
+I GOT BORED AT VIDEO 90, LIFTING COMPUTED VALUES UP.    IT JUST SEEMED LIKE REFACTORING THE CODE TO
+USE A SINGLE STATE, SO JUST WATCHED THE VIDEO'S AND DIDN'T UPDATE THE CODE.
+---
+

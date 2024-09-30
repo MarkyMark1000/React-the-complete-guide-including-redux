@@ -586,3 +586,148 @@ I GOT BORED AT VIDEO 90, LIFTING COMPUTED VALUES UP.    IT JUST SEEMED LIKE REFA
 USE A SINGLE STATE, SO JUST WATCHED THE VIDEO'S AND DIDN'T UPDATE THE CODE.
 ---
 
+## SECTION 7
+---
+
+#### Split CSS code across multiple files
+---
+
+You can create multiple files with css in them and import the css into a specific component, eg
+Header.css to go with Header.jsx and the import using something like:
+```
+import './Header.css';
+```
+
+BIG DISADVANTAGE - css is not scoped to a particular component.
+
+#### Use inline styles
+---
+
+You can use inline styles within jsx, but the format is a bit different to html.   You pass
+{}, with an object inside it, hence {{}}.   Also when you have styles that contain a hyphen
+you use camel case instead, eg:
+```
+<p style={{
+    colour: 'red',
+    textAlight: 'left'
+}}>
+</p>
+```
+Declaring the styles within the jsx file makes it specific to that app.
+
+You can also dynamically style elements based upon variables fairly easily:
+```
+<p style={{
+    colour: emailNotValid ? 'red' : 'black'
+}}>
+</p>
+```
+
+DISADVANTAGE - No seperation between css and jsx logic
+
+#### Conditional class css
+---
+
+You can style things conditionally using className.   A useful tip for processing some css that
+must always be present, plus some that is conditional/dynamic is to use javascripr `` string, eg:
+```
+className={`label ${emailNotValie ? 'invalid': ''}`}
+```
+(similar to python 'f' strings)
+
+#### Scoping with css modules
+---
+
+To make css component specific, instead of using a filename like Header.css, use Header.module.css
+and then import it into the jsx file.   You will import it as something and then use dot notation
+to reference the specific classes, eg:
+```
+import {classes} from './Header.module.css';
+
+<p className={classes.paragraph}></p>
+```
+
+Then, when the javascript or css is built, the build process will create a unique name for each
+instance of the component to make sure the css is component specific.
+
+#### styled-components
+---
+
+There is a system that you have to install called styled-components.   I'm not a big fan, but if
+you see code like this, it is probably using it:
+```
+import {styled} from 'styled-components';
+
+const ControlContainer = styled.div`
+    display: flex;
+    .....
+`
+```
+It needs to be installed into a react project.   Also, I double checked on the web and aparently it is
+quite common to use this.   The basic concept is that the 'styled' import contains all of the components
+that you typically might use within html, you then create a new one, eg ControlContainer from a div
+(see above) and then apply styles using the backtick.   This ControlContainer then becomes available in
+the project, eg <ControlContainer />.
+
+You can perform conditional formatting passsing values into styled-components, eg:
+```
+colour: ${({invalid}) => invalid ? blue : green};
+```
+
+The invalid prop will conflict with normal html attributes, so it is a convention to pre-fix styled component
+props with a $, eg:
+```
+colour: ${({$invalid}) => $invalid ? blue : green};
+<ControlContainer $invalid={inputVariable} />
+```
+
+There is a special `&` character that can be used to represent the main component and apply styles to sub
+components within 'styled-components', eg:
+```
+   & h1 {.....}             would apply css styling to ControlContainer -> h1
+```
+
+#### tailwind css
+---
+
+This is a very popular css framework that works well with react and I have heard about it at work!
+
+To install tailwind, goto the tailwind website, installation, framework guides, then vite:
+https://tailwindcss.com/docs/guides/vite
+
+---------------------------
+IMPORTANT
+I think the tailwind docs show you how he setup an initial react app using vite!
+---------------------------
+
+```
+npm create vite@latest my-project -- --template react       //setup a react project
+
+npm install -D tailwindcss postcss autoprefixer
+AND:
+npx tailwind init -p
+
+etc
+```
+
+VS CODE - Install 'Tailwind CSS Intellisence' extension for good autocompletion etc.
+
+tailwind has similarities to bootstrap.   I am just going to have to do it to get
+experience of this.
+
+When creating dynamic tailwind components, you can just use variables, eg:
+```
+let labelClasses = "......";
+if(invalid) {
+    labelClasses = ".....x....";
+}
+...
+<label className={labelClasses}>{label}</label>
+```
+
+## SECTION 7 - DEBUGGING REACT APPS
+---
+
+First part he goes over looking at errors in the console.   Generally aim for the first
+problem and it might show the call stack and which line of code went wrong at the top.
+

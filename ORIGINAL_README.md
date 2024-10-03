@@ -731,3 +731,151 @@ if(invalid) {
 First part he goes over looking at errors in the console.   Generally aim for the first
 problem and it might show the call stack and which line of code went wrong at the top.
 
+Within chrome, when you look at the developer tools (inspect elemenbt), you can goto the
+sources tab.   You should see a file structure with the code in.   It tends to have one
+file with pre-compiled and once post compiled.   You just add a breakpoint in the code where
+you need it.   It's quite easy really.
+
+You can also do it in safari, but the directory structure might not be as clear.
+
+Strict Mode
+
+Generally done in index.jsx, but can be other components.   Need to import
+```
+import {StrictMode} from 'react';
+```
+
+You then wrap a component with <StrictMode></StrictMode>, eg:
+```
+<StrictMode>
+<App />
+</StrictMode>
+```
+
+It executes code twice in development, so can be useful for highlighting potential issues
+that need fixing, such as growing arrays that are not supposed to grow.
+
+DEV TOOLS - Chrome Only
+
+He also shows you about react dev tools, which can be installed within chrome.   It adds a new
+area to the dev area, where you can see 'components' and investigate components, props and
+different areas of the screen.
+
+Performance Insights -> Components
+
+You just do a global search for how to install this.   As it turns out, you can also install
+it into Safari, but you need to use npm/yarn etc:
+```
+yarn global add react-devtools
+npm install -g react-devtools
+```
+
+## SECTION 7 - REFS AND PORTALS
+---
+
+Within the code you can create a variable that points directly to an object and then gets that
+objects values directly without the get/set of useState, eg:
+```
+import {useState, useRef} from 'react';
+
+const playerName = useRef();
+
+function handleOnClick() {
+    setEnteredPlayerName(playerName.current.value);
+    setSubmitted(true);
+}
+
+<input ref={playerName} type="text" />
+
+```
+YOU MUST USE ```.current``` to access the variable.   It is like binding an input to a variable.
+
+Note that it is possible to adjust the value of the input using something like ```playerName.current.value = 0```,
+but that isn't really what react is about, but it can simplify things sometimes.
+
+REF's DO NOT CAUSE A COMPONENT CODE TO BE RE-EXECUTED UNLIKE STATE, WHICH DOES, WHICH IS WHY
+WE USE STATE.   REF'S ARE USEFUL BECAUSE THEY GIVE YOU DIRECT DOM ELEMENT ACCESS.
+
+He had an interesting example project using a timer.   He couldn't set a local variable to the timer because
+the javascript jsx code wiped the variable out when it was refereshed.   He tried making it a global variable,
+but found this was shared between other components and so ended up with confused functionality.   He ended
+up using a a ref to point at the timer function,
+
+USEREF CAN BE USED TO POINT AT TIMER FUNTIONS !!!!
+
+```
+timer.current = setTimeout(()=>{...}
+...
+clearTimeout(timer.current);
+```
+
+#### forward refs
+---
+
+You cannot forward a ref into another component such as creating a dialog and a ref to it
+in a parent component, then pass that ref into a sub component and call dialog.current.showModal().
+
+To achieve this w need to use forwarRef.   The code needs to be restructured slightly with the
+following key points:
+    - import forwardRef
+    - forwardRef needs to enclose the entire function that you would normally use and is assigned
+    to a constant.
+    - the ref parameter is passed at the end after params
+    - don't forget to export default the constant.
+
+
+```
+import {forwardRef} from 'react';
+
+const ResultModal =  forwardRef(function ResultModal({result, targetTime}, ref) {
+    return (
+        <dialog ref={ref} className="resultModal">
+            ....
+        </dialog>
+    );
+})
+
+export default ResultModal;
+```
+
+#### useImperativeHandle
+---
+
+With the previous example, we call dialog.current.showModal() from outside of the
+component, which can be a bit yucky as far as encapsulation is concerned.   For
+example if we change from <dialog> to <div>, the code outside of the component
+will stop working.
+
+With useImperativeHande, we can define functions as part of the component that
+can be called outside of the component.   We then only have to focus on the code
+inside the dialog component if we change from <dialog> to <div>.
+
+```
+useImperativeHandle(
+    ref,
+    () => {
+        return {
+            open() {
+                dialog.current.showModal();
+            }
+    };
+});
+```
+
+#### portals (TELEPORT)
+---
+
+NOTE - THE IMPORT STATEMENT IS DIFFERENT
+```
+import {createPortal} from 'react-dom';
+
+return createPortal(
+    jsx code that you want to teleport,
+    document.getElementById('modal')
+)
+```
+
+It basically teleports the react jsx code of the component somewhere else within the document,
+in particular the index.html file
+
+Commonly used to transport code such as dialogs to other locations in html.

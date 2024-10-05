@@ -586,7 +586,7 @@ I GOT BORED AT VIDEO 90, LIFTING COMPUTED VALUES UP.    IT JUST SEEMED LIKE REFA
 USE A SINGLE STATE, SO JUST WATCHED THE VIDEO'S AND DIDN'T UPDATE THE CODE.
 ---
 
-## SECTION 7
+## SECTION 6
 ---
 
 #### Split CSS code across multiple files
@@ -770,7 +770,7 @@ yarn global add react-devtools
 npm install -g react-devtools
 ```
 
-## SECTION 7 - REFS AND PORTALS
+## SECTION 8 - REFS AND PORTALS
 ---
 
 Within the code you can create a variable that points directly to an object and then gets that
@@ -879,3 +879,260 @@ It basically teleports the react jsx code of the component somewhere else within
 in particular the index.html file
 
 Commonly used to transport code such as dialogs to other locations in html.
+
+## SECTION 9 - PRACTICE PROJECT
+---
+
+I WATCHED THIS, BUT DIDN'T IMPLEMENT IT.   SOMETHING TO CATCH UP ON LATER.
+
+## SECTION 10 - CONTEXT API, useReducer, Advanced State Management
+---
+
+Prop drilling - passing props from one component into a sub component, then sub component
+into another sub component etc etc.
+
+#### component composition
+---
+
+He had an example where he moved the code from the shop component into the app component,
+stopped passing in a prop, but instead used the children prop to pass the data to the
+sub component.
+
+The problem with this is that it leads to a bloated app component, ie the top level component.
+
+#### context api
+---
+
+The idea is that you can wrap multiple component with a context api that makes the props
+available globally.   Also you can use it to manage 'state'.
+
+There is a convention where context mangers go in a store directory next to the components directory,
+so this is where he put the context manager(shopping-cart-context.jsx)
+
+```
+import {createContext} from 'react';
+
+export const CartContext = createContext({
+    items: []
+});
+```
+
+Note - Name CartContext is on purpose, not snake case and first letter is capital.
+
+
+Then in the app that is using it you wrap the components that want to use the
+context manager:
+
+```
+import {CartContext} from './store/shopping-cart-context.jsx';
+
+// Wrap the components that you want to be able to use this context manager using
+// this syntax:
+
+<CartContext.Provider value={{items: []}}>
+
+    <Component1 />
+    <Component2 />
+
+</CartContext.Provider>
+```
+
+The `value={{items: []}}` is like a default value that you must provide when you
+want to use the context within one of the sub apps.
+
+To consume the context provider, you do something like this within the sub components:
+```
+// Import useContext and the actual context provider that you want to use:
+import {useContext} from 'react';
+import {CartContext} from '../store/shopping-cart-context.jsx';
+
+export default function ........{
+    const cartCtx = useContext(CartContext);
+    // OR
+    const {items} = useContext(CartContext);        // deconstruct context provider
+
+    // You then use it within the component, eg:
+    if(cartCtx.items.length === 0){...}
+    // OR
+    if(items.length === 0){...}
+}
+```
+
+#### linking it to state
+---
+
+If you want to link it to a state, you just adjust the value property to point at the
+state, however this has a problem.  It allows you to read, but not update!
+
+```
+const [shoppingCart, setShoppingCart] = useState({
+    items: [],
+  });
+
+<CartContext.Provider value={shoppingCar}>
+...
+```
+
+To deal with this, we add an object with the ability to read and update the context
+provider.   You then pass this into the value:
+```
+const ctxValue = {
+    items: shoppingCart.items,      // read the context provider
+    addItemToCart: handleAddItemToCart  // function for updateing the context provider
+};
+
+<CartContext.Provider value={ctxValue}>
+
+// He also updated the context provider so that we get autocompletion:
+export const CartContext = createContext({
+    items: [],
+    addItemToCart: () => {}         // new dummy function
+});
+```
+
+You can also deconstruct the context provider and then use the individual components,
+eg:
+```
+const {items ,addItemToCart} = useContext(CartContext);
+
+if (items.count !== 0) {....}
+```
+
+There is another method that you can use to access a context provider that might be used
+in old react projects.   It's a bit more cumbersome and so isn't the default method.
+It basially uses 'consumer' property of the context provider, but it needs to contain
+a function that returns jsx code.   get:
+```
+return (
+    <CartContext.Consumer>
+    {(cartCtx) => {
+        the original jsx code that you were returning.
+    }}
+    </CartContext.Consumer>
+);
+```
+
+WHEN ACCESSING STATE VIA THE CONTEXT PROVIDER, THE REACT JSX SHOULD UPDATE WHEN THE
+STATE IS CHANGED.
+
+AS YOU MAY HAVE NOTICED EVEN THOUGH IT REDUCES PROP PROPOGATION, YOU STILL END UP
+CALLING THE CONTEXT PROVIDE AND SETTING VALUES ALL OVER YOUR COMPONENTS.   THERE
+IS AN ALTERNATIVE PATTERN, WHICH INVOLVES MOVING THE STATE AND FUNCTIONS THAT PROCESS
+THE STATE INTO THE CONTEXT MANAGER (shopping-cart-context.jsx).
+
+```
+import {useState, createContext} from 'react';
+
+// Define the context
+export const CartContext = createContext({
+    items: [],
+    addItemToCart: () => {}         // new dummy function
+});
+
+// Also define a function that creates state, provides functions for editing
+// state etc:
+export default function CartContextProvider({children}) {
+    // define states
+    const [shoppingCart, setShoppingCart] = useState(...);
+
+    function addItemToCart() {...};
+
+    const ctxValue = {
+        items: shoppingCart.items,
+        addItemToCart: addItemToCart,
+    };
+
+    return (
+        <CartContextProvider value={ctxValue}>
+            {children}
+        </CartContextProvider>);
+
+}
+```
+
+You then just import that CartContextProvider and wrap your sub components
+that need it with the component, eg:
+```
+    import {CartContextProvider} from '.....';
+
+    export default function Blah() {
+        return (
+            <CarcContextProvider>
+                .....
+            </CartContextProvider>
+        );
+    }
+```
+
+WARNING - DOING THE USER TEST WAS DIFFICULT FOR THIS.   HERE ARE SOME KEY POINTS:
+
+KEY POINTS:
+    - You need to create a theme context provider which consists of:
+        - A theme using react's createContext(...);
+        - A theme context provider, which is basically an exported function.
+            - You define states and functions to be exported within the context provider function
+            - You either
+                - create an object to hold those states and functions and pass it into value={object} OR:
+                = deconstruct the states/functions directly into value, ie value={{myState, myFunction}}
+            - Don't forget that the returned context provider, must end in .Provider and contain {children}
+        - You choose a high up component, eg App.jsx where all sub-apps will be able to access the context provider
+            - import the context provider FUNCTION
+            - wrap the jsx in the context provider.
+        - Within the sub-components that need to use the context provider you do the following:
+            - import the context (NOT FUNCTION)
+            - use the react function useContext(...) to get a handle on the context.
+            - use that handle to either display state values or run functions for updating state.
+        - Remember:
+            - THIS IS HARD
+            - provide {children} to the context provider function and return something like this:
+                <ThemeContext.Provider value={..}>{children}</ThemeContext.Provider>
+        
+        AS THIS IS VERY DIFFICULT, I HAVE COPIED MY CODE THAT WORKED FOR THE TEST AND SAVED IT IN
+        Section 10 -> 'my working tutorial' directory, but this won't work locally because it is based
+        around the online method of writing react code.
+    
+#### useReducer
+---
+
+You may have noticed that quite frequently, the code looks a bit horrible because you have lots of
+calls like this (pevStateValue) => {...code to update state...}
+
+He is introducing a new concept called useReducer.   The generall format is like this:
+```
+function shoppingCartReducer(state, action) {
+    return state;
+}
+
+export default function BlahContextProvider() {
+    const [shoppingCartState, shoppingCartDispatch] = useReducer(shoppingCartReducer, {items: []});
+
+    // The first argument is the function defined above, OUTSIDE OF THE CONTEXT PROVIDER FUNCTION
+    // and the second argument is the default/initial value of the state.
+
+
+}
+```
+later on in the code, you would then call the dispatch with an object to indicate how you want to
+adjust the state, eg:
+```
+shoppingCartDispatch(
+    {
+        type: 'ADD_ITEM',
+        payload: id
+    }
+);
+```
+
+The shoppingCartReducer could then be adjusted as follows:
+```
+function shoppingCartReducer(state, action) {
+    if(action.type==='ADD_ITEM') {
+        ........
+        return new_state;
+    }
+    return state;
+}
+```
+
+I HAVE TO SAY, THIS CHAPTER IS COMPLICATED !!!!!!
+

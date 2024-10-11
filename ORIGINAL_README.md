@@ -1136,3 +1136,136 @@ function shoppingCartReducer(state, action) {
 
 I HAVE TO SAY, THIS CHAPTER IS COMPLICATED !!!!!!
 
+AGAIN, THIS IS PRETTY COMPLEX, SO I HAVE COPIED MY EXERCISE CODE INTO THE
+'my working reducer exercise' DIRECTORY.
+
+## SECTION 11 - side effects and useEffect() Hook
+---
+
+side effects are 'tasks' that don't impact the current render cycle.
+
+He showed an example where the App needed sort sort a list of locations by
+their distance from our current geolocation.   This was put at the top of
+the App component.   Because other code then needs to use this data, it
+is used to update a state.
+
+This causes a problem because the new code updates state, the change in
+state causes the jsx template to re-render, which causes the sorting
+algorithm to run again etc etc, ie it creates an infinite loop.
+
+#### useEffect for some side effects
+---
+
+It takes the following format:
+```
+import {useEffect} from 'react';
+
+useEffect(()=>{
+    .....
+}, [dependencyList]);
+```
+
+- The code is run after the jsx code has been rendered, but the next time
+it comes to running this, it checks the dependency list to see if it has
+changed.   If it hasn't changed, the useEffect code is not run again, hence
+preventing the infinite loop.
+
+- When the dependency list is empty, ie [], then it will only execute once.
+If you left out the , []) argument, the useEffect would execute over and over
+again and you would get an infinite loop.
+
+HE HAS TWO TUTORIALS DEMONSTRATING THAT YOU DO NOT ALWAYS NEED TO USE useEffect,
+ONLY TO PREVENT INFINITE LOOPS OR DO SOMETHING THAT MUST HAPPEN AFTER THE jsx
+CODE HAS RENDERED.
+
+From tutorial 183-185, he went through an alternative way of showing a dialog
+box.   The showModal() and close() need to be called after the modal has
+renedered, so he uses useEffect to run the code at the end, after the return
+statement:
+```
+function Modal({ open, children }) {
+  const dialog = useRef();
+
+  // useEffect is used to run the actual showModal and close after the
+  // jsx has rendered and the dialog is actually associated with the modal.
+  useEffect(() => {
+    if(open) {
+      dialog.current.showModal();
+    }
+    else {
+      dialog.current.close();
+    }
+  }, [open]);   // adds dependencies here, ie props/state that the effect is dependent upon that can cause a refender.
+
+  return createPortal(
+    <dialog className="modal" ref={dialog} open={open}>
+      {children}
+    </dialog>,
+    document.getElementById('modal')
+  );
+};
+```
+THE PREVIOUS CODE HAS A SLIGHT BUG WHERE THE USER CAN CLOSE A MODAL BY HITTING ESCAPE.   YOU NEED TO
+ADD AN onClose={..} PROP TO SYNCRONISE THE STATE.   SEE 185 FOR HOW TO FIX THE BUG !!!!
+
+In 188 onwards he mentioned a couple of key points:
+
+- It is possible to return a cleanup function from useEffect(), which is called when the DOM of the jsx
+is removed.
+- There are some difficulties when using a function as a dependency within useEffect, eg:
+
+```
+export default function DeleteConfirmation({ onConfirm, onCancel }) {
+  useEffect( () => {
+    const timer = setTimeout(() => {
+      onConfirm();
+    }
+      ,3000
+    );
+
+    // Return a cleanup funciton which is called once the dom is removed.
+    // Note, if useEffect is re-run, the cleanup function runs again before
+    // useEffect (clean last useEffect).
+    return () => {clearTimeout(timer);};
+
+  },[onConfirm]); //Important - Danger
+
+  ....}
+```
+- The previous example is used ot clear the timer when the dom is removed, ie no button is hit,
+which is great.
+- using the function onConform could cause an infite loop.   It is called, which re-renders the
+parent app, which causes useEffect to re-render, which causes onConfirm to call again etc etc.
+
+There is another react hook which can be used to deal with this problem useCallback.
+
+#### useCallback
+---
+
+It takes the following format:
+```
+import {useEffect, useCallback} from 'react';
+
+const someFunc = useCallback(
+  normal_function_code
+, [list_of_dependencies]);
+```
+
+Again, it has a list of dependencies and the normal_function_code is executed when this function is
+called.   The key point is that this function isn't re-rendered all of the time and prevents the
+infinite loop.
+
+KEY:   USE useCallback WHEN USING useEffect WITH DEPENDENCIES THAT ARE FUNCTIONS.
+
+#### Interesting Examples
+---
+
+He has an interesting example in lecture 190, where he has a progress bar that counts down
+and useEffect is used to clean it up once the function is cleared.
+
+HE ALSO POINTED OUT THAT THE EXAMPLE IS INEFFICIENT BECAUSE THE TIMER CODE CHANGES STATE EVER
+10 MILLISECONDS, WHICH MAKES THE JSX RE-RENDER EVERY 10 MILLISECONDS.   SO HE SHOWS HOW
+THE PROGRESS BAR CAN BE PUT INTO IT'S OWN COMPONENT WHICH MAKES IT MORE EFFICIENT.
+
+## SECTION 11 - ????
+---

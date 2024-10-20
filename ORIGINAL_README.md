@@ -1267,5 +1267,136 @@ HE ALSO POINTED OUT THAT THE EXAMPLE IS INEFFICIENT BECAUSE THE TIMER CODE CHANG
 10 MILLISECONDS, WHICH MAKES THE JSX RE-RENDER EVERY 10 MILLISECONDS.   SO HE SHOWS HOW
 THE PROGRESS BAR CAN BE PUT INTO IT'S OWN COMPONENT WHICH MAKES IT MORE EFFICIENT.
 
-## SECTION 11 - ????
+## SECTION 12
 ---
+
+This goes through building an example project.  It's worth watching quickly if you are having problems
+with the previous sections.
+
+There is something intersting.   The timer wasn't re-rendering once expired, so he managed to solve
+this by making sure the key=.... was set on the component.   eg
+```
+<QuestionTimer
+    key={activeQuestionIndex}
+    timeout={10000}
+    onTimeout={handleSkipAnswer}
+/>
+```
+It also helped show why react strict mode is useful for debugging.
+
+## SECTION 13
+---
+
+After looking at the initial project, I noticed something interesting. He has a function in log.js
+the prints output to the console, but it formats the output so that it stands out.
+
+#### React Profiler
+---
+
+He spent a bit of time demonstrating the react profiler.  In chrome, you goto inspect, then in the
+title that contains things like console, eleements etc, to the right (hidden by >>) you get profiler.
+
+Initially there is no data, but if you hit the record circle, hit some buttons on the website, then
+stop recording, it will show a relationship between the components on the page and which components
+were updated.
+
+There are 2 main views:
+
+Flame Icon - Has a hierarchical view of DOM and hightlights components that were changed during the
+    recording with a colour.
+Ranked Icon - I think this is ranked by render time.   It could be based upon component that caused
+    the re-render and the components impacted below it.
+
+#### Memo
+---
+
+During this tutorial, he highlighted how react re-renders lots of the dom when a state in the
+parent component changes.   He used the memo field:
+```
+import {memo} from 'react';
+
+const Counter = memo(...original function....);
+
+export default Counter;
+```
+
+memo takes a look at the props that are passed to the component and will only rerender the
+component if the input props have changed.
+
+DON'T OVERUSE MEMO BECAUSE IT TAKES SOME PERFORMANCE TIME TO CHECK THE PROPS. INSTEAD TRY TO
+USE IT HIGH UP IN THE COMPONENT TREE AS POSSIBLE TO PREVENT LOTS OF SUB COMPONENTS BEING
+RENDERED.
+
+#### Clever Component Composition
+---
+
+He demonstrated that a clever use of component composition can result in less rendering
+in the dom. Changing state within a component will only render sub components, but
+won't cause the parent component to re-render, so by moving state that changes quite
+a lot into sub components rather than parent components can prevent lots of re-rendering.
+
+He demonstrated this with the ConfigureCounter component, which was moved from App.jsx
+into ConfigureCounter.jsx
+
+#### memo doesn't always work and useCallback
+---
+
+He showed an example of where using memo should work, but didn't because of functions
+within a component.   By using useCallback, it stopped the component being re-rendered
+all of the time.
+
+#### useMemo
+---
+
+You can get the situation where a complex function can be recalculated whenever a
+prop changes, however unlike memo, useMemo works on the function rather than the
+component funciton:
+
+memo - works on component function.
+useMemo - works on individual functions.
+
+Example:
+```
+const initialCountIsPrime = useMemo(() => isPrime(initialCount), [initialCount]);
+```
+
+AGAIN, DON'T OVERUSE useMemo, AS IT CAN IMPACT PERFORMANCE.   USE IT TO ENCLOSE
+CALCULATION INTENSIVE FUNCTIONS
+
+#### React uses a virtual DOM.   Time to explore it.
+---
+
+When you hit a button etc, it isn't the whole DOM that changes, just a part of it.
+
+React builds a virtual DOM in memory, when you interact with it, it builds the DOM,
+compares it to the old DOM, checks what HTML etc has changed and then only implements
+those changes.   Efficient !!
+
+#### IMPORTANT - WHY KEYS MATTER
+---
+
+You would think that state is specific to a component, but it isn't.   It is also
+dependent upon position, which means you can have weird effects if components of
+the same type are next to each other but swap position.
+
+This is why the `key` is important to keep local specific to an instance of the
+component.
+
+Using keys can also speed up dom rendering with only a few components re-rendering
+rather than lots.
+
+There was a situation where a component wasn't re-rendering when a prop changed.
+YOU CAN FORCE A COMPONENT TO RERENDER IF YOU GIVE IT A KEY THAT CONTAINS THE
+VALUE THAT YOU WANT TO MAKE THE COMPONENT RERENDER, IF IT CHANGES, eg:
+```
+<Counter key={chosenCount}.../>
+```
+[A change in chosenCount will re-render the Counter component.]
+
+#### IMPORTANT - MILLIONJS
+---
+
+He briefly goes over the instalation of this, which is pretty simple when done in
+automatic mode and can significantly speed up DOM rendering.  Worth watching for
+complex projects.
+

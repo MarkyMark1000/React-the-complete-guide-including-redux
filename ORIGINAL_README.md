@@ -1400,3 +1400,200 @@ He briefly goes over the instalation of this, which is pretty simple when done i
 automatic mode and can significantly speed up DOM rendering.  Worth watching for
 complex projects.
 
+## SECTION 14 - Class Based Components
+---
+
+So far we have only seen functional compnents.   You also get class comonents that take
+the following general form:
+```
+import {Component} from 'react';
+
+class User extends Component {
+  render() {
+    // extending Components makes this.props available
+    return <li className={blah}>{this.props.name}</li>;
+  }
+}
+
+export default User;
+```
+
+CLASS BASED COMPONENTS CANNOT USE REACT HOOKS.
+
+BOTH CLASS AND FUNCTIONAL BASED COMPONENTS CAN EXIST WITHIN A PROJECT.
+
+#### Working with State & Events
+---
+
+In this tutorial he shows you how to change a functional component into
+a class based component.   The following are key points:
+
+1 - When using state within a class based component, you need to use a
+constructor.   You must call super(); and you set this.state to a single
+object.
+
+2 - Any functions are created as functions of the class.   If you want to 
+change state you need to use the this.setState() function.   Unlike the
+useState, react merges the changes that you make and there is a function
+type one that ensures updates flow through correctly.
+
+3 - You reference the state values using `this.state.myValue`
+
+4 - When you call a function you cannot just use this.functionName, you
+need to use something like this:
+```
+{this.toggleUsersHandler.bind(this)}
+```
+
+
+FINAL RESULT:
+```
+class Users extends Component {
+  
+  constructor() {
+    // With class based components, state is always initialized
+    // to an object.
+    super();
+    this.state = {
+      showUsers: true,
+    };
+  }
+
+  // Functions are just added to the class.
+  toggleUsersHandler() {
+    // This isn't how you change state in the class
+    // this.state.showUsers = false;
+
+    // IMPORTANT - Don't need to override state, it will be merged, hence
+    // no need for ...this.state
+    // this.setState({showUsers: false});
+    // It also supports a function format:
+    this.setState((oldState) => {
+      return {showUsers: !oldState.showUsers};
+    });
+  }
+
+  render() {
+
+    const usersList = (
+      <ul>
+        {DUMMY_USERS.map((user) => (
+          <User key={user.id} name={user.name} />
+        ))}
+      </ul>
+    );
+
+    return (
+      <div className={classes.users}>
+        <button onClick={this.toggleUsersHandler.bind(this)}>
+          {this.state.showUsers ? 'Hide' : 'Show'} Users
+        </button>
+        {this.state.showUsers && usersList}
+      </div>
+    );
+  }
+}
+```
+
+#### component lifecycle with classes
+---
+
+You cannot use things like useEffect() within a class.   Basically the Component
+base class comes with some functions that you can overide.   The 3 most important
+are:
+- componentDidMount()       - called when component mounted         - equivalent to useEffect(...,[])
+- componentDidUpdate()      - called when comp is updated           - equivalent to useEffect(...,[someDependencies])
+- componentWillUnmount()    - called before comp unmouned           - equivalent to cleanup function in useEffect
+
+
+componentDidUpdate(prevProps, prevState) {
+    // to avoid infinite loops, check if prevState has changed
+}
+
+componentDidMount() {
+    // send http request to some database
+    // then update state:
+    this.setState({filteredUsers: DUMMY_USERS});
+}
+
+componentWillUnmount() {
+    console.log('Users will unmount!');
+}
+
+#### Class Components and Context
+---
+
+With class based components, you cannot connect to multiple contexts, you can only
+connect to one.
+
+Within the class, you add something like this:
+```
+class UserFinder extends Component {
+    static contextType = UsersContext;
+    ....
+```
+
+You could then access the context using something like
+```
+    this.context.users
+```
+
+If you do need more than one context, perhaps consider wrapping a class within a
+class.
+
+#### Class vs Functional Components
+---
+
+- As a general principle, prefer functional components, unless:
+    - you prefer class components
+    - your teams uses a lot of class components
+    - you need to work with error boundaries
+
+#### Class Components and Error Boundaries
+---
+
+In javascript can use try ... catch ... to process errors, which is fine within
+one error.  This doesn't work within jsx if you want to raise an error and another
+parent component to process the error.
+
+As an end result, what you end up with is a component that you can wrap other
+components with to catch their errors, eg:
+```
+    <ErrorBoundary>
+        <SomeOtherComponent />
+    </ErrorBoundary>
+```
+
+To write an error boundary component, you must use a class and it can take a format
+similar to the following:
+```
+class ErrorBoundary extends Component {
+    constructor () {
+        super();
+        this.state = {hasError: false};
+    }
+
+    componentDidCatchError(error) {
+        console.log(error);
+        this.setState({hasError: true});
+    }
+
+    render() {
+        if(this.state.hasError) {
+            return <p>Something went wrong!</p>
+        }
+        return this.props.children;
+    }
+}
+```
+
+CURRENTLY IF YOU ARE LOOKING AT THE WEBPAGE IN DEV, YOU MIGHT QUICKLY SEE THE ERROR
+AND THEN IT WILL TAKE YOU TO ANOTHER PAGE HIGHLIGHTING THE ERROR.   IN A PRODUCTION
+BUILD ENVIRONMENT THIS WON'T HAPPEN.
+
+## SECTION 15 - HTTP Requests (connecting to a database)
+---
+
+
+#### ???
+---

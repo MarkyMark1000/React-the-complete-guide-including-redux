@@ -1597,3 +1597,130 @@ BUILD ENVIRONMENT THIS WON'T HAPPEN.
 
 #### ???
 ---
+
+I THINK ELIZABETH CLOSED THE DOCUMENT WITHOUT SAVING THIS, SO I LOST MY NOTES ON HTTP
+REQUESTS.   REVISIT THE TUTORIALS AT SOME POINT.
+
+## SECTION 16 - Custom Hooks
+---
+
+
+#### Rules of hooks
+---
+
+- They must be inside react component functions.
+- Cannot be nested within other code such as if statements or other components.
+
+It turns out that there is some flexibility within the second rule.   You can call hooks
+inside custom hooks.
+
+Why do you want to do this ?
+
+Example:   The code for fetching data from an api is pretty common, you send a request to
+a server, modify some loading, result and error state.   You would ideally like to move this
+into a function and import it.   Unfortunately this doesn't work because you cannot do this
+with react hooks.   Thinks like state and hooks need to be inside the react function.
+
+#### custom hooks
+---
+
+- custom hooks must begin with 'use'
+- we pass in a generic function that can be used for fetching the data
+- it make fetchAvailablePlaces more generic.
+- state management is moved inside of the custom hook.
+- dependencies are updated to include new function or input arguments.
+- we can return state or setState in an Object or Array so that calling components
+  can use them.   eg:
+
+```
+export function useFetch(fetchFn, initialValue) {
+    
+    // need to add state into the custom hooks.
+    const [isFetching, setIsFetching] = useState(false);
+    const [error, setError] = useState();
+    const [fetchedData, setFetchedData] = useState(initialValue);
+
+    // original code
+
+    useEffect(() => {
+        async function fetchData() {
+          setIsFetching(true);
+    
+          try {
+            const data = await fetchFn();
+            setFetchedData(data);
+    
+          } catch (error) {
+            setError({
+              message:
+                error.message || 'Could not fetch data, please try again later.',
+            });
+            setIsFetching(false);
+          }
+        }
+    
+        fetchPlaces();
+      }, [fetchFn]);
+
+    // code is useless unless we return the state that is being managed.   We can do
+    // this via an array or object
+    return {
+        isFetching,
+        error,
+        fetchedData
+    };
+}
+```
+
+Within the calling component you would need to do someting like this:
+import {useFetch} from './hooks/useFetch.js';
+
+```
+function blah() {
+
+    // initial value is passed in and set to an empty array.
+    const {isFetching, error, fetchedData} = useFetch(fetchUserPlaces, []);
+
+}
+```
+
+You might want external data to be able to modify data, well you can return the
+state updating functions, eg:
+```
+return {
+    isFetching,
+    setIsFetching,
+    error,
+    setError,
+    fetchedData,
+    setFetchedData
+};
+```
+
+Also, it might be useful to alias the state/functions in the parent code, eg:
+```
+const {isFetching, error, fetchedData: fetchedUsers} = useFetch(.....);
+```
+
+Within tutorial 249, he shows you how to wrap the non-http request to the navigator as
+a function based promise.   COULD BE USEFUL:
+
+```
+// common javascript approach of turning non-promise based code into a promise based function.
+async function fetchSortedPlaces() {
+    const places = await fetch availablePlaces();
+
+    return new Promis((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition((position)=> {
+            const sortedPlaces = sortPlacesByDistance(
+                places,
+                position.coords.latitude,
+                position.coords.longtitude,
+            );
+
+            resolve(sortedPlaces);
+        });
+    });
+}
+```
+

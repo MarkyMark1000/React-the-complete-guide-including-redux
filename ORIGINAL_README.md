@@ -1601,6 +1601,149 @@ BUILD ENVIRONMENT THIS WON'T HAPPEN.
 I THINK ELIZABETH CLOSED THE DOCUMENT WITHOUT SAVING THIS, SO I LOST MY NOTES ON HTTP
 REQUESTS.   REVISIT THE TUTORIALS AT SOME POINT.
 
+Here is a summary of key points after watching the video quickly:
+
+- It's a good plan to give any state that is going to be populated an empty/default value
+  befor it is loaded, eg
+  ```
+  const [data, setData] = useState([]);     //empty array
+  ```
+
+- You create an infinite loop if you use fetch() directly in the component, you need to use
+  useEffect to ensure api queries are executed after the component changes IF the dependency
+  changes:
+```
+    useEffect(()=>{
+        fetch('http://blah.com')
+        .then((response)=>{
+            return response.json();
+        })
+        .then((resData) =>{
+            setAvailablePlaces(resData.places);
+        });
+    });
+```
+
+#### async/await
+---
+
+People tend to prefer the async/await syntax.   You cannot use this directly, but you can define a function
+inside a function and then call it, eg:
+```
+    useEffect(()=>{
+        async function fetchPlaces() {
+            const response = await fetch('http://blah.com');
+            const resData = await response.json();
+            setAvailableData(resData.places);
+        }
+
+        fetchPlaces();
+    }, []);
+```
+
+#### errors
+---
+
+It might be worth reviewing his code because he imports an error function
+
+Within http requests it is common to have 3 states:
+    - data fetched
+    - fetching state, so we can show a wheel or fetching message
+    - error state to display any error messages.
+
+The previous fetch code might be adjusted into a try catch loop.   Errors
+can occur when fetching the data or when it is actually received from the
+server, so it might look like this:
+```
+setIsFetching(true);
+try{
+    const response = await fetch('http://blah.com');
+    const resData = await response.json();
+
+    if(!resData.ok) {
+        throw new Error('Failed to fetch places!');
+    }
+    setAvailableData(resData.places);
+}
+catch(error)
+{
+    setError(error);
+}
+setIsFetching(false);
+```
+
+In his video's he adds a section where he extracts geolocation data and then transforms it.
+Because of this he needed to move setIsFetching(false) into the error trap and within the
+geolocation callback function.
+
+#### Improving code structure
+---
+
+He moves some of the http request code into a seperate file called http.js to simplify the code
+```
+export async function fetchAvailablePlaces() {
+    const response = await fetch('http://blah.com');
+    const resData = await response.json();
+
+    if(!reponse.ok){
+        throw new Error('Failed to fetch new places');
+    }
+
+    return resData.places;
+}
+```
+
+This code is then used by importing it and then:
+```
+    const places = await fetchAvailablePlaces();
+```
+
+#### PUT/POST example
+---
+
+```
+export async function updateUserPlaces(places) {
+    const response = await fetch(
+        'http://blah.com',
+        {
+            method: 'PUT',
+            body: JSON.stringify(places),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+    )
+
+    const resData = await response.json();
+
+    if(!reponse.ok) {
+        throw new Error('Failed to update user data!');
+    }
+
+    return resData.message;
+}
+```
+
+#### Optimistic Updating
+---
+
+He uses optimistic updating, where the effect of updating data is shown within the front end befor
+the data is posted/put.
+
+In the event that an error occurred, this needs to be folled back and potentially the error is
+displayed.
+
+There are alternatives, such as posting and then updating.
+
+HE ALSO SHOWS HOW TO DISPLAY THE ERROR MESSAGE WITHIN AN ERROR MODAL!!   USEFUL.
+
+
+EXTRA INTERESTING POINTS:
+- He goes through deleting points and refreshing data.
+- On Chrome, in Network, you can adjust a setting to 'Slow 3G' to see what a website looks like when
+  loading really slowly.   This is why having a fetching state is useful to display wheels or text
+  when updating.
+
 ## SECTION 16 - Custom Hooks
 ---
 

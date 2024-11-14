@@ -1867,3 +1867,90 @@ async function fetchSortedPlaces() {
 }
 ```
 
+## SECTION 17 - Forms
+---
+
+He uses htmlFor, which is a react specific binding because for is html:
+```
+    <label htmlFor="email">email</label>
+    <input id="email" type="email" name="email" />
+```
+
+#### submitting forms
+---
+
+- DEFAULT BEHAVIOUR OF FORMS IS TO SUBMIT TO A SERVER, EVEN IF YOU ADD AN onClick={handleClick} TO
+  THE BUTTON.
+- To Stop this you can:
+    - add type="button"   [defaut is type="submit"]
+    - add javascript event handler code to the FORM's onSubmit event, eg:
+    ```
+    <form onSubmit={handleSubmit}>...</form>
+    ```
+    quite often you will see the default behaviour prevented for this method, eg:
+    ```
+    function handleSubmit(event) {
+        event.preventDefault();
+        ....
+    }
+    ```
+
+#### state and generic handlers
+---
+
+In video 253, he shows how to setup 2 way binding within a form using generic state ie an object
+and a generic handle function for updating the state.   Looks a bit complicated to me,
+but watch the video if you need 2 way binding in a form for some reason.
+
+#### set input via refs
+---
+
+Shows you how to use refs:
+```
+// define refs at the top:
+const email = useRef();
+const password = useRef();
+
+// then connect to the fields
+<input id=".." ...  ref={email} />
+<input id=".." ...  ref={password} />
+
+// then use the refs within a function code
+function handleSubmit(event) {
+    event.preventDefault();
+    ...
+    const enteredEmail = email.current.value;
+}
+```
+
+DOWNSIDE - YOU SHOULDN'T RESET THE FORM FIELDS USING REF'S - NOT RECOMMENDED.
+
+#### Get Values via FormData
+---
+
+IT TURNS OUT THERE IS A BUILT IN WAY OF GETTING FORM DATA THAT YOU SHOULD SERIOUSLY
+CONSIDER USING, ESPECIALLY WITH COMPLEX FORMS WITH A LOT OF DATA:
+```
+    function handleSubmit(event) {
+        event.preventDefault();
+
+        // FIELDS ON THE FORM MUST HAVE A 'name' ATTRIBUTE
+        const fd = new FormData(event.target);
+
+        // Can then access data using things like
+        const enteredEmail = fd.get('email');
+
+        // An easier way to get it into an array is:
+        const data = Object.fromEntries(fd.entries());
+
+        // This won't get data from objects with a common name, eg checkboxes.
+
+        // If you need to get multiple data from things that have a common name, eg checkboxes
+        // you can use:
+        const acquisitionChannel = fd.getAll('acquisition');
+        data.acquisition = acquisitionChannel;
+
+
+    }
+```
+

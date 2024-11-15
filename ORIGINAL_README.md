@@ -1954,3 +1954,73 @@ CONSIDER USING, ESPECIALLY WITH COMPLEX FORMS WITH A LOT OF DATA:
     }
 ```
 
+#### reset
+---
+
+Important - there are 3 types of input button in forms, 'button', 'submit' and 'reset'.
+
+reset will reset the form.
+
+You can use ref's, but this isn't recommended: `email.current.value = '';`
+
+Better to use this within a handle(event) {..} function:
+```
+    event.target.reset();
+```
+
+#### validating input
+---
+
+He goes over validating input on every keystroke, this isn't great because it highlights errors
+early on as soon as the user types.
+
+He goes over validating data using onBlur.   Watch video 258 if your interested, my instinct
+says go for validation upon form submission.
+
+onSubmit(event), the general structure is:
+```
+function handleSubmit(event) {
+    event.preventDefault();
+
+    //define some refs
+
+    const emailIsValid = !enteredEmail.includes('@');
+
+    if(!emailIsValid) {
+        setEmailIsInvalid(true);
+        return;
+    }
+    set EmailIsInvalid(false);  // stops error being shown when clicking again.
+
+    // sent http request etc.
+
+
+}
+```
+
+#### built in validation
+---
+
+HTML has some built in features for input validation:
+```
+<input type="email" ... required />                             - Input is required
+<input type="password" ... required minlength={8} />            - Minimum Length
+```
+
+To me, it seems like a good plan to combine the built in type validation with
+custom logic when needed.   Go for simplicity first.
+
+
+He has an example where he joins the input and error message into a single component
+for re-usability.
+
+He also moves his input validation logic into a utils directory where email, etc validation
+logic can be shared across the app.   Good Plan.
+
+Video 264 - uses a custom hook to capture some state management into a function.   Useful for
+reducing code and re-use.    I still find custom hooks a bit tricky - WHEN TO USE THEM ?
+
+There are also some external libraries that make form validation easier, eg. React Hook Form
+and FormIk.   Can use these libraries to explore efficient ways to deal with form validation.
+ie provide good examples.
+

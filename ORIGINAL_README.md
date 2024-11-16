@@ -2094,7 +2094,29 @@ EXAMPLE CODE!!!
 ## SECTION 19 - Diving into REDUX (alternative to context api)
 ---
 
+3 common classifications for state:
+- LOCAL STATE               [useState or useReducer in function]
+- CROSS COMPONENT STATE     [prop drilling, react context, REDUX]
+- APP WIDE STATE            [prop drilling, react context, REDUX]
 
+WHY DO WE NEED REDUX WHEN WE ALREADY HAVE RECT CONTEXT ??
 
-#### ?????
+It's fine for small or medium sized apps, but not so good for large ones:
+- Complex Setup and Management, you end up with deeply nested context providers or a large
+  overly complex single context provider
+- It is fine for updating the page with data that doesn't change that much, but not good for
+  high frequency state changes.   REDUX IS, SO CAN BE BETTER.
+
+#### HOW DOES REDUX WORK
 ---
+
+There is ONE and only ONE central data store that components can subscribe to.
+
+You do not change data directly, but use a REDUCER function to change state.
+
+WARNING:
+When using REDUX and the createStore() function, you may get deprecation warnings.
+The REACT Redux team now recommend using Redux Toolkit, but you can still use
+createStore() for now, which is useful for LEARNING REDUX.   Redux Toolkit will be
+covered later.
+

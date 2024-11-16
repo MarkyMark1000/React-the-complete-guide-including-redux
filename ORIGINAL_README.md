@@ -2024,3 +2024,77 @@ There are also some external libraries that make form validation easier, eg. Rea
 and FormIk.   Can use these libraries to explore efficient ways to deal with form validation.
 ie provide good examples.
 
+## SECTION 18 - Practice Project
+---
+
+With a typical project, he starts by sketching out so he gets a feel for what components he will need.
+
+
+This project has a MODAL for adding things to a basket and a CHECKOUT form, so could provide good
+example code.
+
+
+#### formatting currency
+---
+
+He used a special browser feature for formatting currencies:
+```
+export const currencyFormatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+});
+
+Then in the react code where you format it, you do something like this:
+import {currencyFormatter} from '.....';
+
+....
+   {currencyFormatter.format(meal.price)}
+....
+```
+
+He also creates a UI directory under components and puts simple user interface components
+such as a custom <Button /> component (not <button>).
+
+#### basket/context management
+---
+
+He creates a /store directory next to components and a file called CartContext.jsx
+
+Video 272 he shows you how to setup a context manager to represent the basket.   He uses
+something called useReducer.   I cannot quite remember the details about this, but research
+later:
+
+FUTHER RESEARCH:   useReducer
+
+[I think it is a function that can 'ADD_ITEM', 'REMOVE_ITEM' etc to the basket]
+
+Video 272 complex - manipulating state with useReducer, could be worth a look at some point.
+
+#### modal
+---
+
+He creates a re-usable modal component that injects the model into a very top level .html
+file area:
+```
+<div id="modal"></div>              GOOD PLAN
+```
+
+There are some interesting features about modals that he adds the code for here, so might be
+worth looking at his example code at some point.
+
+VIDEO 275 - Lots of stuff on building another context manager, BUT HAS HOW TO CLOSE THE
+DIALOG USING A CLEANUP FUNCTION.
+
+
+
+THIS CHAPTER WAS GOOD FOR LOOKING AT CODE TO UPDATE A BASKET, SEND DATA TO A BACKEND AND
+SHOW MODALS.   IF NECESSARY YOU COULD SKIP THROUGH IT QUICKLY LATER ON AND GO THROUGH THE
+EXAMPLE CODE!!!
+
+## SECTION 19 - Diving into REDUX (alternative to context api)
+---
+
+
+
+#### ?????
+---

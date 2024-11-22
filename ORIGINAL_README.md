@@ -2120,3 +2120,145 @@ The REACT Redux team now recommend using Redux Toolkit, but you can still use
 createStore() for now, which is useful for LEARNING REDUX.   Redux Toolkit will be
 covered later.
 
+#### Basics of Redux
+---
+
+- If you have a react project, then you need to install redux usings something like:
+```
+npm install redux
+```
+
+- Then as a super basic example, he demonstrated the core components of redux:
+```
+// import the redux package into node:
+const redux = require('redux');
+
+// reducer that adds one to the state - IMPORTANT, needs a default value
+const counterReducer = (state = {counter: 0}, action) => {
+    return {
+        counter: state.counter + 1;
+    };
+};
+
+// create the redux store using the reducer
+const store = redux.createStore(counterReduce);
+
+// create a subscriber to the store, get the state and log it.
+const counterSubscriber = () => {
+    const latestState = store.getState();
+    console.log(latestState);
+};
+
+// point subscribe to the subscriber function
+store.subscribe(counterSubscriber);
+
+// this then dispatches an action to redux, which just runs the reducer again in
+// its simplest state
+```
+store.dispatch({type: 'increment'});
+
+You can then test this code by running something like ```node redux-demo.js```
+
+You can then adjust the reducer so that it takes certain actions when a certain type
+of task is implemented, eg:
+```
+const counterReducer = (state = {counter: 0}, action) => {
+    if(action.type==='increment') {
+        return {
+            counter: state.counter + 1;
+        };
+    }
+    if(action.type==='decrement') {
+        return {
+            counter: state.counter 1 1;
+        };
+    }
+
+    return state;
+};
+```
+
+YOU CAN USE REDUX IN NON-REACT PROJECTS, IT'S JUST THAT WE WILL BE USING IT HERE!
+
+#### Example Project
+---
+
+He installed 2 packages, redux can be used anywhere, but there is a package that makes using
+redux with react easier:
+```
+npm install redux react-redux           yarn add redux react-redux
+```
+
+He adds redux code into src/store folder.
+
+He adds the basic of a redux system, ie reducer and a store.   He then mentiones
+that to use it you need to make the redux store available.   He goes into the
+parent index.js file and then does the following:
+```
+// adds an import statement for Provider
+import {Provider} from 'react-redux';
+
+// adds an import statement for the store
+import store from './store/index';
+
+// adjusts the Provider statement to include the imported store.
+root.render(<Provider store={store}><App /></Provider>);
+```
+
+Next he adjusts a component, counter.js so that we can get part of
+redux and display it:
+```
+import {useSelector} from 'react-redux';
+...
+const Counter = () => {
+  const counter = useSelector(state => state.counter);
+
+  return (
+    ...{counter}...
+  );
+```
+
+NOTE:   There is another function called useStore for getting the entire store,
+but this is more focused and convenient.
+
+REDUX will make sure that the counter state is always up to date and will dispose
+of the redux link the the component isn't used anymore.
+
+He also shows you how to adjust values within redux:
+```
+// He adjusts the import statement to import useDispatch
+import {useSelector, useDispatch} from 'react-redux';
+...
+
+const Counter = () => {
+  // he creates an instance of useDispatch (as well as useSelector):
+  const dispatch = useDispatch();
+  const counter = useSelector(state => state.counter);
+  
+  ...
+
+  // He creates two functions for handling button clicks, with dispatch
+  // adjustments to redux:
+
+  const handleIncrement = () => {
+    dispatch({type: 'increment'});
+  }
+
+  const handleDecrement = () => {
+    dispatch({type: 'decrement'});
+  }
+
+  // He also adjusts the main jsx code to return 2 buttons
+  // and attach the onClick handlers:
+
+  return (
+    ...
+      <div>
+        <button onClick={handleIncrement}>Increment</button>
+        <button onClick={handleDecrement}>Decrement</button>
+      </div>
+      ...
+  );
+};
+```
+

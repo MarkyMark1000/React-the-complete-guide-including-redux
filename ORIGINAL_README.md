@@ -2262,3 +2262,116 @@ const Counter = () => {
 };
 ```
 
+#### Class Based Redux Components
+---
+
+It is possible to setup class based components with redux using the ```connect```
+function.   see video 295 'Redux with class based components'.
+
+#### Attaching payloads to actions
+---
+
+You would adjust the reducer so that it can adjust the state and uses the
+action argument to get the payload:
+```
+    if (action.type==='increase') {
+        // We use action to hold the payload used within redux.
+        return {
+            counter: state.counter + action.amount
+        }
+    }
+```
+
+#### Multiple data
+---
+
+He shows you how to work with multiple pieces of data in redux.   You basically
+use a bigger object eg {counter: 0, showCounter: false} but have to make sure
+that you always return the full object when adjusting state.
+
+He also initaited the default value at the top using something like:
+```
+const initialState = {counter: 0, showCounter: true};
+
+const counterReducer = (state=initialState, action) => {
+```
+
+IMPORTANT:   NEVER MANIPULATE THE STATE IN REDUX eg state.counter++.
+YOU MUST ALWAYS RETURN A NEW STATE.   IT CAN LEAD TO UNEXPECTED BUGS
+AND MAKE TRACKING THEM DOWN DIFFICULT.
+
+#### Redux Toolkit
+---
+
+Some of the problems with redux are that you can end up with a very large reducer
+file and you can have typo's like 'incriment' or 'decrrement'.   Redux Tooit is
+make using redux easier.
+
+You need to install it:
+```
+npm install @reduxjs/toolkit        yarn add @reduxjs/toolkit
+```
+
+You could uninstall redux or not install it at all because this is
+automatically included with this toolkit.
+
+```
+import {createSlice} from '@redux/toolkit';
+
+const initialState = {counter: 0, showCounter: true};
+
+/*
+With redux toolkit you use createSlice to create a section of state to
+be managed with redux.   You have to give it a name and an initial state.
+You define an object of reducer functions for manipulating the state.
+WITH redux toolkit ONLY, you don't have to return new objects, you can just
+adjust the state directly.   A sample format is shown below.
+*/
+const counterSlicke = createSlice({
+    name: 'counter',
+    initialState: initialState,              // or just initialState
+    reducers: {
+        increment(state) {
+            state.counter ++;
+        },
+        decrement(state) {
+            state.counter --;
+        },
+        increase(state, action) {
+            state.counter = state.counter + action.amount;
+        },
+        toggleCounter(state) {
+            state.showCounter = !state.showCounter;
+        }
+    }
+});
+```
+
+You would then make the slice visible using something like this:
+```
+const store = createStore(counterSlice.reducer);
+
+export default store;
+```
+
+THIS HAS A PROBLEM IF WE USE MULTIPLE SLICES AS YOU CAN ONLY CREATE
+ONE STORE.   A Solution:
+
+```
+// import configureStore
+import {createSlice, configureStore} from '@redux/toolkit';
+
+...
+define slices
+....
+
+// Use configureStore that can combined multiple reducers together
+// behind the scenes.
+const store = configureStore({
+    reducer: {
+        counter: counterSlice.reducer,
+        banana: bananaSlice.reducer
+    }
+})
+```
+

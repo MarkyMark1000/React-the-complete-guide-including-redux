@@ -2375,3 +2375,88 @@ const store = configureStore({
 })
 ```
 
+IF YOU WANT TO RUN/ACCESS THE ACTIONS, YOU THEN DO SOMETHING
+LIKE THIS:
+```
+counterSlicer.actions.increment
+...
+// can export the counter actions like this at the bottom:
+export const counterActions = counterSlice.actions;
+```
+ie calling reducer functions is like calling a method, : )
+
+He then goes through the code updating the dispatch calls:
+```
+  const handleDecrement = () => {
+    dispatch({type: 'decrement'});
+  }
+  to
+  const handleDecrement = () => {
+    dispatch(counterActions.decrement());
+  }
+```
+
+IMPORTANT - Handling Payloads:
+Firstly, you adjust the handler call to dispatch and pass the argument
+in the front.
+```
+  const handleIncrease = () => {
+    dispatch(counterActions.increase(10));
+  }
+```
+HOWEVER, within the reducer, arguments are stored in the `payload` object
+and must be accessed using this:
+```
+    increase(state, action) {
+        state.counter = state.counter + action.payload;
+    },
+```
+He doesn't explain how you deal with multiple arguments though, hhmmm!
+
+WORKING WITH MULTIPLE SLICES:
+
+He goes over an example working with multiple slices by creating a new
+slice and adjusting the createStore function to take an object of the slices.
+He also exports another actions constant:
+```
+const store = configureStore({
+    reducer: {counter: counterSlice.reducer, auth: authSlice.reducer}
+});
+...
+export const counterActions = counterSlice.actions;
+export const authActions = authSlice.actions;
+```
+
+IMPORTANT - When trying to access the state with multiple reducers, you
+need to drill down into the objects, ie 'counter' or 'auth'.   So in the
+counter, where we useSelector, we need to change the following:
+```
+  const counter = useSelector(state => state.counter);
+  const show = useSelector(state => state.showCounter);
+  to
+  const counter = useSelector(state => state.counter.counter);
+  const show = useSelector(state => state.counter.showCounter);
+```
+
+He then goes through some examples of using the redux toolkit slices across
+multiple components.
+```
+  const dispatch = useDispatch();
+  const isAuth = useSelector(state => state.auth.isAuthenticated);
+  const logoutHandler = () => {
+    dispatch(authActions.logout());
+  };
+
+  return (
+    <header className={classes.header}>
+      <h1>Redux Auth</h1>
+      {isAuth && (
+        <nav>....)})
+```
+
+SPLITTING CODE
+
+This is quite important.   He splits the code within the /store/index.js directory into
+different files, eg auth.js and counter.js.   VERY USEFUL FOR BIG PROJECTS - simplify
+structure by splitting redux.
+

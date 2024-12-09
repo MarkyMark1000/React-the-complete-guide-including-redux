@@ -2460,3 +2460,10 @@ This is quite important.   He splits the code within the /store/index.js directo
 different files, eg auth.js and counter.js.   VERY USEFUL FOR BIG PROJECTS - simplify
 structure by splitting redux.
 
+## SECTION 20 - Advanced Redux
+---
+
+- reducer functions must be side-effect free and syncronous.
+
+#### HOW DOES REDUX WORK
+---

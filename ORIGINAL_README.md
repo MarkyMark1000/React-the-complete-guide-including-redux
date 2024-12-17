@@ -2467,3 +2467,201 @@ structure by splitting redux.
 
 #### HOW DOES REDUX WORK
 ---
+
+#### REDUX AND ASYNC CODE
+---
+
+When querying data from an API, whatever you do, do not put the async queries, ie fetch
+into the redux reducer.   You basically have 2 options:
+
+- Inside the components via things like useEffect
+- Inside action creators.
+
+In the example he goes through, he highlights that the firebase backend is pretty basic and
+we cannot transform data in the backend, all we do is save data.   This isn't typical of a
+normal project if  you build your own backend.   In his example, we will need to do more work
+in the front end.
+
+In video 331, he has some code attached that he doesn't go through.   The code does the transformation
+of the data in a component and he emphasises strongly how bad this is because you are transforming
+the data inside redux and inside the component.   yuk.
+
+#### useEffect with redux
+---
+
+In this example, he adjusts the App.js file so that it references the cart.   He then uses useEffect
+to send an HTTP Put request to the server and uses 'cart' as a dependency so that whenever the
+cart changes, it sends data to the server.
+
+It works nicely, but has a problem - sending empty data to the server when it first loads.
+
+#### Handling http states and redux (video 334)
+---
+
+Quite important, he adds a 'notification' component and logic into the app component so that the
+user is made aware of when the data is sent to the server.   He also make sure the code isn't run
+on the first reload.
+
+#### Thunks
+---
+
+These are 'action creators' that delays an action until later.   It does not return an action,
+but a function which eventually returns an action.
+```
+// create a function
+export const sendCartData = (cart) => {
+
+  // async function to update show notification as pending
+  return async (dispatch) => {
+    dispatch(
+      uiActions.showNotification({
+        status: 'pending',
+        title: 'Sending...',
+        message: 'Sending cart data!',
+      })
+    );
+
+    // define async function to send the fetch request
+    const sendRequest = async () => {
+      const response = await fetch(
+        'https://react-http-6b4a6.firebaseio.com/cart.json',
+        {
+          method: 'PUT',
+          body: JSON.stringify(cart),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Sending cart data failed.');
+      }
+    };
+
+    // put async function to send request within try catch
+    try {
+      await sendRequest();
+
+      // display success to user
+      dispatch(
+        uiActions.showNotification({
+          status: 'success',
+          title: 'Success!',
+          message: 'Sent cart data successfully!',
+        })
+      );
+    } catch (error) {
+      // display error to user
+      dispatch(
+        uiActions.showNotification({
+          status: 'error',
+          title: 'Error!',
+          message: 'Sending cart data failed!',
+        })
+      );
+    }
+
+  };
+};
+```
+
+Then what you do is call that update pattern from useEffect within your App:
+```
+  useEffect(() => {
+    if (isInitial) {
+      isInitial = false;
+      return;
+    }
+
+    dispatch(sendCartData(cart));
+  }, [cart, dispatch]);
+```
+
+Personally, I found this complicated to understand, so revisit at some point.
+Apparently redux-toolkit accepts this pattern.
+
+#### Getting Data
+---
+
+THE CODE IS CURRENTLY WITHIN cart-slice.js FILE, HE CREATES ANOTHER FILE CALLED
+cart-actions.js WHERE HE PUTS HIS ACTIONS.
+
+HE THEN CREATES ANOTHER FUNCTION / THUNK TO GET THE DATA FROM THE DATABASE:
+```
+export const fetchCartData = () => {
+  return async (dispatch) => {
+
+    // define async function to get the data from the api
+    const fetchData = async () => {
+      const response = await fetch(
+        'https://react-http-6b4a6.firebaseio.com/cart.json'
+      );
+
+      if (!response.ok) {
+        throw new Error('Could not fetch cart data!');
+      }
+
+      const data = await response.json();
+
+      return data;
+    };
+
+    try {
+      // try to fetch the data using the previously defined function
+      const cartData = await fetchData();
+      // then update the redux toolkit cart if successful
+      dispatch(
+        cartActions.replaceCart({
+          items: cartData.items || [],
+          totalQuantity: cartData.totalQuantity,
+        })
+      );
+    } catch (error) {
+      // if there is an error show the error to the user
+      dispatch(
+        uiActions.showNotification({
+          status: 'error',
+          title: 'Error!',
+          message: 'Fetching cart data failed!',
+        })
+      );
+    }
+  };
+};
+```
+
+TO GET THIS WORKING, HE ADDS IT TO APP.js, HOWEVER HE DOESN'T ADD IT WITHIN THE EXISTING
+useEffect FUNCTION, WHICH ONLY RUNS WHEN THE CART UPDATES.   HE ADDS IT TO A NEW useEffect
+FUNCTION WITH NO DEPENDENCIES.
+```
+  useEffect(() => {
+    dispatch(fetchCartData());
+  }, [dispatch]);
+```
+
+This does cause a problem.   On the intial load, the cart is updated from the database,
+but because the cart is then changed, the second useEffect is called, which sends the
+action to update the database.   He gets around this by adding a 'changed' field to
+redux cart and then only updating the data when it changes:
+```
+   useEffect(() => {
+    if (isInitial) {
+      isInitial = false;
+      return;
+    }
+
+    // KEY ADJUSTMENT:   (ALSO SEE changed IN cart-slice.js)
+    if (cart.changed) {
+      dispatch(sendCartData(cart));
+    }
+  }, [cart, dispatch]);
+```
+
+#### Redux DevTools
+---
+
+IMPORTANT:   VIDEO 338, SHOWS YOU HOW TO INSTALL AND USE 'REDUX DEVTOOLS', WHICH CAN BE IMPORTANT
+FOR DEBUGGING A REDUX PROJECT.
+
+THIS SECTION ON REDUX WAS COMPLICATED - REWATCH IF NECESSARY!!!!
+
+## SECTION 21 - React Router
+---

@@ -2665,3 +2665,48 @@ THIS SECTION ON REDUX WAS COMPLICATED - REWATCH IF NECESSARY!!!!
 
 ## SECTION 21 - React Router
 ---
+
+Need to install a package into your app:
+```
+npm install react-router-dom        yarn add react-router-dom
+```
+Website:
+```
+https://reactrouter.com
+```
+
+#### Defining routers
+---
+
+First need to import something within the app:
+```
+import {createBrowserRouter} from 'react-router-dom';
+```
+
+Next you define the routers with an array of objects:
+```
+const router = createBrowserRouter([
+  {path: '/', element: <HomePage />},
+  {},
+]);
+```
+[HomePage is a component that has been imported into App]
+
+Finally you need to embed the router into the app by doing this:
+- import a new react-router-dom component called RouterProvider
+- include it into the App:
+```
+import {createBrowserRouter, RouterProvider} from 'react-router-dom';
+import HomePage from './pages/Home';
+
+const router = createBrowserRouter([
+  {path: '/', element: <HomePage />},
+  {},
+]);
+
+function App() {
+  return <RouterProvider router={router} />;
+}
+
+export default App;
+```

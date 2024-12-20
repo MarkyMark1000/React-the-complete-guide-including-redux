@@ -2710,3 +2710,313 @@ function App() {
 
 export default App;
 ```
+
+Next he adds a second page, which is quite straight forward.
+
+#### Alternative way of defining routers
+---
+
+There is another way of defining routes used in older versions of react-router-dom, which
+involves using jsx code:
+```
+const routeDefinitions = createRoutesFromElements(
+    <Route>
+        <Route path="/" element={<HomePage/>}>
+        <Route path="/products" element={<ProductsPage/>}>
+    </Route>
+);
+```
+Things like createRoutesFromElements and Route need to be imported from react-router-dom.
+
+I believe you then use this, but see video 346 for more details:
+```
+const router = createBrowserRouter(
+```
+
+#### Navigating between pages with links
+---
+
+WE DO NOT WANT TO USE STANDARD LINKS TO NAVIGATE BETWEEN PAGES.   THIS SENDS A REQUEST TO
+THE SERVER AND THEN RE-LOADS THE ENTIRE SINGLE PAGE APPLICATION AGAIN, WHICH ISN'T
+EFFICIENT.
+
+What  you do is import a Link component and then use this instead of your usual <a> tag
+with 'to' instead of 'href':
+```
+import {Link} from 'react-router-dom';
+
+function HomePage() {
+    return <>
+        <h1>My home page.</h1>
+        <p>
+            Go to <Link to='/products'>the list of products.</Link>
+        </p>
+    </>
+}
+```
+
+#### Layouts and Nested Routes
+---
+
+IMPORTANT - You will commonly want to do something like have a navigation bar wrapping different
+routes.   You could add a navigation bar to each page within the pages directory, but what commonly
+happens in react router is that you define a route that has children:
+```
+...
+import RootLayout from './pages/Root';
+...
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <RootLayout />,
+    children: [
+      { path: '/', element: <HomePage /> },
+      { path: '/products', element: <ProductsPage /> },
+    ],
+  }
+]);
+```
+
+RootLayout is another component that specifies the layout of the navigation and you specify where
+to show the children elements using the 'outlet' component:
+```
+import { Outlet } from 'react-router-dom';
+import MainNavigation from '../components/MainNavigation';
+...
+function RootLayout() {
+  return (
+    <>
+      <MainNavigation />
+      <main className={classes.content}>
+        <Outlet />
+      </main>
+    </>
+  );
+}
+```
+
+#### Dealing with error pages
+---
+
+It is possible to define a page that is displayed when an error occurs.   You add
+an errorElement:
+```
+...
+import ErrorPage from './pages/Error';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <RootLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      { path: '/', element: <HomePage /> },
+      { path: '/products', element: <ProductsPage /> },
+    ],
+  }
+]);
+```
+
+#### NavLink (active link within Navigation)
+---
+
+It is common to want to highlight which link has been clicked and is currently active
+within the router.   You use a special NavLink that is imported:
+```
+import { NavLink } from 'react-router-dom';
+```
+
+
+```
+function MainNavigation() {
+  return (
+    <header className={classes.header}>
+      <nav>
+        <ul className={classes.list}>
+          <li>
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                isActive ? classes.active : undefined
+              }
+              end
+            >
+              Home
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/products"
+              className={({ isActive }) =>
+                isActive ? classes.active : undefined
+              }
+            >
+              Products
+            </NavLink>
+          </li>
+        </ul>
+      </nav>
+    </header>
+  );
+}
+```
+
+There is a className, which is a function and takes isActive (part of react router) and defines
+what css classes are rendered when the route is active.   In our case the colour is slightly
+different and it is underlined.
+
+IMPORTANT:   Notice the 'end' attribute of the first NavLink.   This is used to say that the
+'to' attribute ends with '/', otherwise is works for multiple paths and always displays as if
+it was active.
+
+Note that you can alternatively use inline styles rather than classes to define what the NavLink
+displayes, eg:
+```
+style={({ isActive }) => ({
+  textAlign: isActive ? 'center' : 'left',
+})}
+```
+
+#### Navigating Programatically
+---
+
+As well as using <Link> or <NavLink>, you might want to navigate within javascript code.
+You import useNavigate and then use this within the code, eg:
+```
+import {Link, useNavigate} from 'react-router-dom';
+...
+const navigate = useNavigate();   // define function constant
+...
+function navigateHandler() {
+    navigate('/products');  // use constant to navigate
+}
+```
+
+#### Dynamic Routes
+---
+
+IMPORTANT - For when you want url's like /products/id, where id is a number or identifier.
+
+Within react-router, you would define a path that is something like this:
+```
+{ path: '/products/:productId', element: <ProductDetailPage /> }
+```
+The productId in this case is the dynamic variable and is proceeded by :
+
+Then, when you want to access the productId within the <ProductDetailPage /> component, you would
+do something like the following:
+```
+import { useParams } from 'react-router-dom';
+...
+const params = useParams();
+...
+<p>{params.productId}</p>
+```
+
+If you then wanted to say dynamically build links to these pages within react, you could do something
+like this:
+```
+{PRODUCTS.map((prod) => (
+    <li key={prod.id}>
+    <Link to={`/products/${prod.id}`}>{prod.title}</Link>
+    </li>
+))}
+```
+
+#### Relative vs Absolute Paths
+---
+
+If you have something like this:
+```
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <RootLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      { path: '/', element: <HomePage /> },
+      { path: '/products', element: <ProductsPage /> },
+    ],
+  }
+]);
+```
+
+Then '/', and '/products' are absolute paths relative to the domain name.   You can change these
+so that they are relative paths by doing something like this:
+```
+const router = createBrowserRouter([
+  {
+    path: '/root',
+    element: <RootLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      { path: '', element: <HomePage /> },
+      { path: 'products', element: <ProductsPage /> },
+    ],
+  }
+]);
+```
+
+By removing the '/', the paths are appended to the path '/root'.   IT IS WORTH WATCHING HIS VIDEO
+ON THIS BECAUSE THIS HAS THE POTENTIAL TO CAUSE CONFUSION, BUT THEY KEY POINTS ARE:
+
+```
+<Link to='..' relative='route'>
+OR
+<Link to='..' relative='path'>
+```
+
+When navigating with links, '..' is a backstep, however if you use 'route', which I believe is the
+default, then when you do '..', it would go from say 'products' to '/root', however if you use
+relative='path', then it goes to the previous location.
+
+#### Index Routes
+---
+
+Small topic, but you can write this:
+```
+{ path: '', element: <HomePage /> },
+```
+as this:
+```
+{ index: true, element: <HomePage /> },
+```
+
+He has a video, 357, which goes into more detail about setting up the router and using children,
+interesting to watch, but don't implement.
+
+#### Loader
+---
+
+It is possible to fetch data within a component, however react router provides a loader property,
+where you can fetch the data before a component is rendered.   The router is changed to use a
+loader property, eg:
+```
+children: [
+    {
+        index: true,
+        element: <EventsPage />,
+        loader: async () => {
+            const response = await fetch('http://www.blah.com');
+            if(!response.ok) {
+                //... todo ...
+            }
+            else {
+                const resData = await response.json();
+                return resData.events;
+            }
+        }
+    }
+]
+```
+
+Within the <EventsPage /> component, you can access the data that is returned (resData.events)
+using a new hook:
+```
+import {useLoaderData} from 'react-router-dom';
+...
+function EventsPage() {
+    const events = useLoaderData();
+    return <EventsList events={events}>;
+}
+```

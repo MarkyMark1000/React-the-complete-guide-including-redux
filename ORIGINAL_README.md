@@ -3020,3 +3020,318 @@ function EventsPage() {
     return <EventsList events={events}>;
 }
 ```
+
+YOU CAN ALSO ADD useLoaderData TO HIGHER LEVEL COMPONENTS AS LONG AS THE COMOPENT IS AT OR BELOW
+THE LEVEL WHERE THE LOADER DATA IS EXTRACTED.
+
+#### Where should loader code go
+---
+
+The previous code makes the router code more complicated with it's api query.   A more common
+pattern is to do the following:
+
+- Add a loader function to the page component (eg Events.js) that you are interested in.
+- Then import the function from that file and use the loader: ... attribute of the route.
+
+#### Reflecting navigation state in the UI
+---
+
+The loader: ... code is executed as soon as you click a link and navigate to a page.   It is
+possible to add code to display a compnoent while loading is executing using something like
+this:
+```
+const navigation = useNavigation();
+
+{navigation.state === 'loading' && <p>Loading...</p>}
+```
+
+He adds this into root.js
+
+IMPORTANT - You don't have to return the data for the component to use, you can in fact return
+a response and hence have access to things like status code, eg:
+```
+return resData;
+instead of
+return resData.events;
+```
+
+#### Errors
+---
+
+There are 2 ways of dealing with errors in the router, you could return data to the component
+with a specific error code and then get the component to render differently based upon that
+data, eg:
+```
+    if(!response.ok) {
+        return {isError: true, description: 'some error'};
+    }
+    else {
+        const resData = await response.json();
+        return resData.events;
+    }
+```
+
+However you can also throw an error, eg:
+```
+    if(!response.ok) {
+        throw {description: 'some error'};
+    }
+    else {
+        const resData = await response.json();
+        return resData.events;
+    }
+```
+
+When you throw an error, the next highest error component defined within the router processes
+the error, ie <ErrorPage /> in this, but could be errorElement within a child:
+```
+const router = createBrowserRouter([
+  {
+    path: '/root',
+    element: <RootLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      { path: '', element: <HomePage /> },
+      { path: 'products', element: <ProductsPage /> },
+    ],
+  }
+]);
+```
+
+To simplify returning responses when we get an error, react-router-dom has a json function:
+```
+import {json} from 'react-router-dom';
+...
+return json(
+    {message: 'could not fetch events'},
+    {status: 500}
+)
+```
+
+When you use this format, you don't have to parse the json when you extract the data.
+
+#### Dynamic Routes and Loader
+---
+
+It is possible to access the parameters of your endpoint within the loader code using Some
+default arguments that react-router sends:
+```
+export async function loader({request, params}) {
+  const id = params.eventId;
+
+  const response = await fetch('http://localhost:8080/events/' + id);
+  if(!response.ok) {
+    throw json({
+      message: 'Could not fetch details for selected event'
+    },{
+      status: 500
+    });
+  }
+  else {
+    return response;
+  }
+}
+```
+
+#### useRouterLoaderData()
+---
+
+When you have complex routes, you might have trouble accessing data that is not directly below/within
+the route you are working on.   You solve this by doing the following:
+- define an id to identify the loader data route that you are interested in
+- import and use, useRouterLoaderData(the_id)' to get a handle on that data.
+
+```
+{
+  path: 'eventId',
+  id: 'event-detail',
+  loader: eventDetailLoader,
+  children: [
+    ...
+  ]
+}
+
+and then inside the page endpoint:
+
+const data = useRouteLoaderData('event-detail');
+...
+```
+
+#### action() functions
+---
+
+IN A SIMILAR MANNER TO LOADER FUNCTIONS, YOU MIGHT WANT TO PERFORM AN ACTION FROM A FORM.
+
+ACTION FUNCTIONS CAN BE ADDED TO THE ROUTER IN A SIMILAR MANNER TO LOADER FUNCTIONS, ie:
+- Add an action function to the page component.
+- Import it into the router.
+- Add it into the router route.
+- Use a special <Form> component, instead of <form> when building a form to submit.
+
+So you might have a form like this:
+```
+function EventForm({method, event}) {
+
+  return <Form method='post' className={classes.form}>
+    <label htmlFor='title'>Title</label>
+    <input
+      id="title"
+      type="text"
+      name="title"
+      required
+      defaultValue={event ? event.title : ''}
+    />
+  </Form>;
+}
+```
+NOTE - You need to give it a 'name'
+
+You then add an action function to the page component:
+```
+export async function action({request, params}) {
+  // get access to the Form data
+  const data = request.formData();
+
+  const eventData = {
+    title: data.get('title'),
+    image: data.get('image')
+  }
+
+  const response = await fetch('http://localhost:8080/events',{
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(eventData)
+  });
+
+  if(!response.ok) {
+    throw json(
+      {message: 'Could not save event.'},
+      {status: 500}
+    )
+  }
+
+  // import redirect from react-router-dom and redirec to a new page when
+  // successful.
+  return redirect('/somepath');
+}
+```
+
+The router would the be changed to something like this:
+```
+...
+import {action as NewEventAction} from './pages/NewEvent';
+...
+{path: 'new', element: <NewEventPage />, action: NewEventAction}
+```
+
+#### submitting data programatically
+---
+
+As an extra note, you can also set the action property on the for:
+```
+return <Form method='post' action='/some_path' className={classes.form}>
+```
+
+DELETING DATA
+
+Video 373 shows you how to create an action that deletes data.   Unlike a post request, you
+generally want to double check data before you delete it, so he uses a useSubmit() hook
+to check the data and then send it programatically:
+```
+const submit = useSubmit();
+
+const proceed = window.confirm('Are you sure?');
+if(proceed) {
+  submit(null, {method: 'delete'});
+}
+```
+
+#### updating the ui state based upon submission
+---
+
+Within EventForm, he wanted to update the form based upon the state of the submission.
+```
+import {useNavigation} from 'react-router-dom';
+...
+const navigation = useNavigation();
+...
+const isSubmitting = navigation.state==='submitting';
+...
+and then change the form data displayed based upon if the form is submitting or not
+```
+
+He demonstrated this by adding a timer to the action and really slowing down the submission.
+
+#### displaying validation errors in the form
+---
+
+Quite often you want the server to also check for errors.   Within the code, if an error is encoutered
+from the server, he raises a 422 error, so he adjust the action code so that it does the following:
+```
+    body: JSON.stringify(eventData)
+  });
+
+  // He doesn't raise a json error, but returns the response to the form.
+  if(response.status===422) {
+    return response;
+  }
+
+  if(!response.ok) {
+    ....}
+```
+Then within the EventForm component, he does the following:
+- imports useActionData hook from react-router-dom
+
+```
+import {useActionData} from 'react-router-dom';
+
+const data = useActionData();
+
+// adds unordered list of errors to the page:
+{data && data.errors && (
+  <ul>
+    {Object.values(data.errors).map((err)=>(
+      <li key={err}>{err}</li>
+    ))}
+  </ul>
+)}
+```
+
+What is interesting is he demonstrates this by displaying the page and then inspecting the code
+using dev tools.   He removes the attributes that prevent you from submitting the form and then
+submits it with empty data.    It displays the list of invalid inputs.
+
+In video 376, he demonstrates how to adjust the code so that the action can also process 'PATCH'
+(possibly 'PUT') requests and update data on the server!!!!
+
+#### useFetcher()
+---
+
+In his example, he had a signup component that was available on a page, but was also available
+in the navigation, hence on multiple pages, which makes calling an action difficult.
+
+useFetcher() can be used to fun an action or loader from a page/router without actually loading
+the route/page.
+
+```
+const fetcher = useFetcher();
+const {data, state} = fetcher;
+
+if(state==='idle' && data && data.message) {
+  .....
+}
+```
+
+#### defer() and <Suspense>
+---
+
+In video 378 he shows how you can use defer to still load a page even when the query hasn't finished
+loading.    Useful for long queries or pages with multiple requests of different length.
+
+IMPORTANT - THERE IS A DIFFERENT WAY OF DEALING WITH THIS IN REACT ROUTER 7.
+
+HE SHOWS YOU HOW TO LOAD 2 BITS OF LOADER CODE.   ON ONE HE MAKES SURE THAT ONE OF THE LOADERS IS AWAITED
+IE FINSHED BEFORE THE PAGE IS DISPLAYED.
+

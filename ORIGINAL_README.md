@@ -3335,3 +3335,242 @@ IMPORTANT - THERE IS A DIFFERENT WAY OF DEALING WITH THIS IN REACT ROUTER 7.
 HE SHOWS YOU HOW TO LOAD 2 BITS OF LOADER CODE.   ON ONE HE MAKES SURE THAT ONE OF THE LOADERS IS AWAITED
 IE FINSHED BEFORE THE PAGE IS DISPLAYED.
 
+#### useSearchParams()
+---
+
+He doesn't use this hook until later on in video 387 (working with query parameters),
+but it is a react-router-dom hook for getting query parameters.
+```
+import {useSearchParams} from 'react-router-dom';
+...
+// const for getting search params and one for setting them.
+const [searchParams, setSearchParams] = useSearchParams();
+...
+const isLoggedIn = searchParams.get('mode') === 'login';
+...
+```
+
+Sometimes you cannot access the search params if you are in something like an action
+function, so you can use something like this:
+```
+export async function action({request}) {
+...
+const searchParams = new URL(request.url).searchParams;
+}
+```
+
+## SECTION 22 - Adding Authentication to React Apps
+---
+
+#### How Authentication Works
+---
+
+Server-side Sessions
+- Common in apps (Django?) where the backend and front-end are strongly coupled.
+- Store a unique identifier on the server and send some identifier to the client.
+- Client sends that identifier with requests for protected resources.
+- Server can check if request is valid.
+
+Authentication Tokens
+- Create a permission token on the server and send it to the client.
+- Client attaches token to future requests for protected resources.
+- Server can verify the attached token.
+
+#### Base Project
+---
+
+Need back and front end to work.   We will perform dev work on the frontend.
+To get the backend to work:
+```
+cd backend
+yarn              npm install
+yarn start        npm start
+```
+
+#### Overview
+---
+
+There is lots of code in here, setting up endpoints and query parameters
+to get everything working and adding error reporting to the front end when
+you have things like multiple logins.
+
+The core bit, when he receives the token is that he stores it in local storage:
+```
+const resData = await response.json();
+const token = resData.token;
+localStorage.setItem('token', token);
+```
+
+He also creates a helper function in the utils directory for getting the authentication
+token:
+```
+export function getAuthToken() {
+  const token = localStorage.getItem('token');
+  return token;
+}
+```
+
+Then, when he wants to use that token to get data, he does someting similar to the
+following:
+```
+const token = getAuthToken();
+const response = await fetch('http://localhost:8080/events/'+eventId, {
+  method: request.method,
+  headers: {
+    'Authorization': 'Bearer ' + token,
+  }
+})
+```
+
+#### Logout
+---
+
+He adds a button that calls an action to remove the localStorage token when
+a logout button is hit.
+
+#### updating the ui based upon auth status
+---
+
+We need a reactive way to detect if the token is present.
+
+Just calling getAuthToken() in the navigation components won't work.
+
+Could use react context, but instead he uses the react-router.
+
+He creates a seperate function to get the token:
+```
+export function tokenLoader() {
+  return getAuthToken();
+}
+```
+
+Then, within the react router he imports this tokenLoader and uses it as
+a loader:
+```
+import {tokenLoader} from './util/auth';
+...
+{
+  path: '/',
+  element: <RootLayout />,
+  errorElement: <ErrorPage />,
+  id: 'root',
+  loader: tokenLoader,
+  children: [....]
+}
+```
+THIS ENSURES THAT THE STATUS OF THE TOKEN IS ALWAYS UP TO DATE AND THE
+REST OF THE APP RESPONDS APPROPRIATELY WHEN WE LOG OUT!!!.
+
+Then within the MainNavigation, or any other area that needs to know if
+we are logged in, then you get the token:
+```
+// this will let you know if the token exits or if it doesn't exits
+const token = useRouteLoaderData('root');
+```
+
+Then within the main react code, you do something like this:
+```
+{!token && (
+  show html to login
+)}
+
+{token && (
+  show html to logout
+)}
+```
+
+IMPORTANT:   loader() must return null or any other value.
+
+#### Adding Route Protection
+---
+
+We want to prevent the router from going to certain routes if the
+user is not logged in, so we need to add some route protection.
+
+You can do this using a loader.
+
+He creates a general loader that tests to see if a user is logged in
+and redirects to a different page if not logged in:
+```
+export function checkAuthLoader() {
+  const token = getAuthToken();
+
+  if (!token) {
+    return redirect('/auth');
+  }
+}
+```
+
+Then you adjust the loader in the routes that need protecting, eg:
+```
+...
+{
+  path: 'edit',
+  element: <EditEventPage />,
+  action: manipulateEventAction,
+  loader: checkAuthLoader,
+}
+...
+```
+
+I'm going to skip location of video's a bit here.   We need to store when
+the token will expire, so within the piece of code that stores the token
+within local storage, we also store the expiration time of the token:
+```
+...
+localStorage.setItem('token', token);
+const expiration = new Date();
+expiration.setHours(expiration.getHours()+1);
+localStorage.setItem('expiration', expiration.toISOString());
+...
+```
+
+He creates a function for calculating the token duration:
+```
+export function getTokenDuration() {
+  const storedExpirationDate = localStorage.getItem('expiration');
+  const expirationDate = new Date(storedExpirationDate);
+  const now = new Date();
+  const duration = expirationDate.getTime() - now.getTime();
+  return duration;
+}
+```
+
+Then adjust getAuthToken so that it returns 'EXPIRED' when the token
+has expired:
+```
+const tokenDuration = getTokenDuration();
+if(tokenDuration<0) {
+  return 'EXPIRED';
+}
+```
+Next, he automatically logs the user out when the token expires.   He
+adds this code into a useEffect() function within the <RootLayout />
+component so that it applies to the entire site.
+It basically creates a timer that automatically logs the user out after
+say 1 hour or however long the expiry of the token is:
+```
+const token = useLoaderData();
+const submit = useSubmit();
+useEffect(()=>{
+  if(!token) {
+    return
+  }
+  if(token==='EXPIRED') {
+    // TRIGGER THE LOGOUT IF THE TOKEN HAS EXPIRED
+    submit(null, {action: '/logout', method: 'post'});
+  }
+  // TRIGGER LOGOUT AFTER 1 HOUR.
+  setTimeout(()=>{
+    submit(null, {action: '/logout', method: 'post'})
+  }, 1*60*60*1000);
+},[token,submit]);
+```
+
+IMPORTANT:   WE ALSO NEED TO REMOVE THE EXPIRATION FROM LOCAL STORAGE
+WHEN WE LOGOUT.
+
+IMPORTANT:   THIS DOESN'T SEEM TO DEAL WITH THE SERVER RAISING AN ERROR
+INDICATING THAT THE TOKEN HAS EXPIRED OR REFRESH TOKENS!!!.
+
+

@@ -3573,4 +3573,57 @@ WHEN WE LOGOUT.
 IMPORTANT:   THIS DOESN'T SEEM TO DEAL WITH THE SERVER RAISING AN ERROR
 INDICATING THAT THE TOKEN HAS EXPIRED OR REFRESH TOKENS!!!.
 
+## SECTION 23 - Deploying Apps
+---
+
+#### Lazy Loading
+---
+
+This isn't directly related to deployment, but is important.   When you deploy
+a react app, it downloads all of the code in one go, which is fine for a small
+app, but can be a problem for big apps.   You can make this better with lazy
+loading.
+
+When doing lazy loading via the router, there are 2 areas:
+- Actual react components/pages.
+- loader/action functions.
+
+loader/action functions
+---
+
+Loaders/Actions are quite easy to fix using an import function within the
+react-router-dom:
+```
+loader: () => import('./pages/Blog').then((module)=>module.loader()),
+```
+
+React Components/Pages
+---
+
+```
+import {lazy, Suspense} from 'react';
+...
+const BlogPage = lazy(()=>import('./pages/Blog'));
+...
+element: (
+  <Suspense fallback=(<p>Loading...</p>)>
+    <BlogPage />
+  </Suspense>
+),
+```
+
+This means that the BlogPage will only be loaded when it is needed
+and the Blog loader function will only be loaded when it is needed.
+
+YOU MUST REMOVE/COMMENT OUT THE ORIGINAL IMPORT STATEMENTS OTHERWISE
+THEY WILL STILL BE LOADED WHEN THE WEBPAGE IS VISITED!!!
+
+#### Build the code
+---
+
+Running this will transform the code into a highly optimized bundle
+with the code minimized and jsx code transformed:
+```
+npm run build       yarn build or possibly yarn run build (not sure)
+```
 

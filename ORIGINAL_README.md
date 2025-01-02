@@ -3627,3 +3627,317 @@ with the code minimized and jsx code transformed:
 npm run build       yarn build or possibly yarn run build (not sure)
 ```
 
+## SECTION 24 - Tanstack Query
+---
+
+#### Installation
+---
+
+```
+npm install @tanstack/react-query   or   yarn add @tanstack/react-query
+```
+
+#### useQuery
+---
+
+```
+import {useQuery} from '@tanstack/react-query';
+
+const {data, isPending, isError, error} = useQuery({
+  queryKey: ['events'],
+  queryFn: fetchEvents
+});
+```
+
+The fetchEvents is a function that returns a promise, it is typically a function that
+contains things like fetch and may raise errors if the query fails.
+
+The array (currently ['events']) is an array of values, that if it changes, will cause
+the data to be fetched from the server rather from the local cache.   You could for
+example use the hour in this section to make sure the query is only run once per hour.
+
+The useQuery function can return multiple values (more than the list above) that let
+you control behaviour.    The isError and error contain values if your fetchEvents
+function raises and error, isPending is based upon the status of the query and data
+should contain the returned data.
+
+IMPORTANT - This will initially raise an error.   You need to add QueryClientProvider
+and QueryClient components to wrap the components using it.   In this case the app:
+```
+import {QueryClientProvider, QueryClient} from '@tanstack/react-query';
+...
+const queryClient = new QueryClient();
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router}>              // from origina router code
+    </QueryClientProvider>
+  );
+}
+```
+
+What tanstack will do is the following:
+- If it has a cache, then it will display the data instantly.
+- It will then still run the query to fetch the data and update the
+data secretly in the background if that data has changed from the cache.
+
+You can set the staleTime so that it only sends the request after 5 seconds, eg:
+```
+const {data, isPending, isError, error} = useQuery({
+  queryKey: ['events'],
+  queryFn: fetchEvents,
+  staleTime: 5000
+});
+```
+
+THE DEFAULT VALUE IS 0 (I BELIEVE), WHICH MEANS THE CACHE IS USED AND THEN A QUERY IS
+RUN AND THE DATA UPDATED AFTER THE CACHE IS DISPLAYED.   5000 ONLY FETCHES EVERY 5
+SECONDS (I BELIEVE).
+
+
+You can also control how long the cache data is kept for.   The default is 5 minutes,
+but you can change it using gcTime
+```
+const {data, isPending, isError, error} = useQuery({
+  queryKey: ['events'],
+  queryFn: fetchEvents,
+  staleTime: 5000,
+  gcTime: 30000
+});
+```
+[The cache will be cleared and data will need to be re-fetched when run after 30 seconds]
+
+He goes through an example where he uses tanstack to query a database search.   Because the
+search term changes from one search to another, you cannot use just 'events' as the queryKey.
+Also to ensure the query is run when the searchTerm changes, he makes sure that the searchTerm
+is managed in 'state'.
+```
+const [searchTerm, setSearchTerm] = useState();
+...
+const {data, isPending, isError, error} = useQuery({
+  queryKey: ['events', {search: searchTerm}],
+  queryFn: fetchEvents(searchTerm),
+});
+```
+
+IMPORTANT:   When you start introducing arguments into the queryFn, things might not work.
+This is because by default, tanstack passes an extra argument into the function.   Also you
+might want to make the queryFn an actual function.   To see the most flexible option, 
+you might want to do something like this:
+```
+const {data, isPending, isError, error} = useQuery({
+  queryKey: ['events', {search: searchTerm}],
+  queryFn: ({signal})=>fetchEvents({signal,searchTerm}),
+});
+```
+And then in the fetchEvents function:
+```
+export async function fetchEvents({signal, searchTerm}) {
+  ...
+}
+```
+
+Within fetch events, you can also get the fetch statement to cancel if you do something
+like navigate away from a page.   You adjust the fetch statement to something like
+this:
+```
+const response = await fetch(url, {signal: signal});
+```
+
+He goes through and example where he wants to turn the query off if the page is reloaded,
+basically he does the following:
+1 - Ensure that when the page first loads, searchTerm is 'undefined':
+```
+const [searchTerm, setSearchTerm] = useState();     [not useState('')]
+```
+2 - He then uses an 'enabled' parameter:
+```
+const {data, isPending, isError, error} = useQuery({
+  queryKey: ['events', {search: searchTerm}],
+  queryFn: ({signal})=>fetchEvents({signal,searchTerm}),
+  enabled: searchTerm !== undefined
+});
+```
+
+3 - When a query is not enabled, isPending is true, which displays the spinner on
+the page.   He replaces instances of isPending with isLoading:
+```
+const {data, isLoading, isError, error} = useQuery({
+  queryKey: ['events', {search: searchTerm}],
+  queryFn: ({signal})=>fetchEvents({signal,searchTerm}),
+  enabled: searchTerm !== undefined
+});
+...
+```
+
+#### useMutation
+---
+
+THIS IS USED WHEN DOING THINGS LIKE POST REQUESTS!
+
+It is optimized to only run when you call it, rather than whenever
+the page loads.
+```
+import {createNewEvent} from '../../util/http.js';
+...
+const {mutate, isPending, isError, error} = useMutation({
+  mutationFn: createNewEvent
+});
+...
+function handleSubmit(formData) {
+  mutate({event: formData});
+}
+```
+
+Again, useMutation can return multiple things, such as 'data', but we don't use
+it here.
+
+You would then add code such as:
+```
+{isPending && (<p>updating ...</p>)}
+...
+{isError && (
+  <ErrorBlock
+    title="Failed to create event"
+    message = {
+      error.info?.message || "Failed to create event.   Please check your inputs and try again later."
+    }
+  />
+)}
+```
+
+IMPORTANT:   When a query successfully updates and only when it updates, we want to navigate to
+a new page, but we also want to mark the data as stale as it has changed.   He does this using
+the following technique:
+- He moves queryClient into a different file (originally in app)
+- Imports it where he need to mark query data as stale
+- Runs queryClient.invalidateQueries();
+eg:
+```
+const {mutate, isPending, isError, error} = useMutation({
+  mutationFn: createNewEvent,
+  onSuccess: () => {
+    // tell tanstack that the query is out of date, in particular any query
+    // that contains the key 'events'
+    queryClient.invalidateQueries({queryKey: ['events']});
+    // move browser to '/events' url
+    navigate('/events');
+  }
+});
+```
+
+Note, we can use exact=true to invalide exact matches to queryKey, eg:
+```
+queryClient.invalidateQueries({queryKey: ['events']}, exact=true);
+```
+
+IMPORTANT:   You can get 404 errors when invalidating queries.   For
+example if you are on a page and hit delete, then the mutation that deletes
+the data on the database, makes all of the queries invalid, including the
+query on that particular page.   That is then refreshed and can raise a
+404 error.
+You can adjuste invalidateQueries so that it doesn't automatically refetch
+the data unless it is requested to:
+```
+queryClient.invalidateQueries({queryKey: ['events']},refetchType: 'none');
+```
+
+
+IMPORTANT: modal and button
+He has an example where he shows a modal asking for the user to confirm the
+deletion of a record.   This is video 420 and could be useful for understanding
+flow of code when using modals!!!!!
+
+IMPORTANT: updating data
+The remaining video's, ie 422, 423 are about updating data.   He covers something
+called optimistic updating.   Really worth watching if you are updating data and I
+will try to briefly cover it here:
+
+#### optimistic updating
+---
+
+When you run a mutation, you can also run a function that runs when the mutation is
+initiated.   We can use this to update the data locally on the website, however we
+will also have to reset that local data if the update fails.
+```
+const {mutate} = onMutation({
+  mutationFn: updateEvent,
+  onMutate: async (data) => {
+    // Get event data from arguments when mutation is initiated.
+    const newEvent = data.event;
+
+    // Cancel all running queries associated with the key ['events', params.id]
+    await queryClient.cancelQueries({queryKey: ['events', params.id]});
+
+    // Get the initial data before it is changed, important for rolling back failures
+    const previousEvent = queryClient.getQueryData(['events', params.id]);
+
+    // Update the data optimistically, ie not with a query to the database for the
+    // key ['events', params.id]
+    queryClient.setQueryData(['events', params.id], newEvent);
+
+    // IMPORTANT, to make previousEvent data available from the context of the error function
+    return {previousEvent};
+  },
+  onError: (error, data, context) => {
+    // Rollback optimistic updating
+    // If we get an error updating, then reset the data to the previousEvent
+    queryClient.setQueryData(['events', params.id], context.previousEvent);
+  },
+  onSettled: () => {
+    // ONCE THE MUTATION IS COMPLETE AND THE QUERY UPDATED, RUN onSettled.   We
+    // then invalidate all query data to make sure the latest data is fetched
+    // from the database and the data is up to date.   Important!.
+    queryClient.invalidateQueries(['events', params.id]);
+  }
+});
+```
+
+Within video 424 he roughly goes over page numbering in the most basic sense
+by limiting the number of records returned.   There is an issue where we
+can end up passing the same data into the queryKey and queryFunction, so he
+gets around this using the following technique:
+```
+queryKey: ['events', {max: 3}],
+queryFn: ({signal, queryKey}) => fetchEvents({signal, ...queryKey[1]}),
+```
+
+ie, he uses the spread operator to get element 1 (not 0) from the queryKey
+
+#### React Query and React Router
+---
+
+Video 425, he goes over using react query, ie tanstack, with react router,
+which is probably important:
+
+He adds a loader function:
+```
+export function loader({params}) {
+  // HE IMPORTS queryClient AND USES fetchQuery from there!!!
+  return queryClient.fetchQuery({
+    queryKey: ['events', params.id],
+    queryFn: ({signal}) => fetchEvent({signal, id: params.id}),
+  });
+}
+```
+
+and an action function:
+```
+export async function action({request, params}) {
+  const formData = await request.formData();
+  // transform the data into simple key: value pairs
+  const updatedEventData = Object.fromEntries(formData);
+  // call function to update the data
+  await updateEvent({id: params.id, event: updatedEventData});
+  // invalidate previous queries
+  await queryClient.invalidateQueries(['events']);
+  // goto a new page
+  return redirect('../');
+}
+```
+
+
+IMPORTANT: IT'S WORTH WATCHING VIDEO 425 AGAIN AT SOME POINT BECAUSE HE GOES
+OVER GIVING THE USER FEEDBACK WHEN THE loader AND action FUNCTION ARE UPDATING
+

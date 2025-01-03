@@ -3941,3 +3941,18 @@ export async function action({request, params}) {
 IMPORTANT: IT'S WORTH WATCHING VIDEO 425 AGAIN AT SOME POINT BECAUSE HE GOES
 OVER GIVING THE USER FEEDBACK WHEN THE loader AND action FUNCTION ARE UPDATING
 
+## SECTION 26 - NEXT.JS
+---
+
+I don't think that I will use this much in combination with python, so my intention
+is to skip through it quickly.   I can re-visit it later on.
+
+It is basically react, but server side.
+
+#### Basics
+---
+
+```
+npx create-next-app@latest first-next-app
+```
+

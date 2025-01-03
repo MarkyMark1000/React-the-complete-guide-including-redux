@@ -3956,3 +3956,19 @@ It is basically react, but server side.
 npx create-next-app@latest first-next-app
 ```
 
+Then to install/run:
+```
+npm install
+npm run dev
+```
+
+The main code is within app directory.   Every next.js project must have a root
+layout.js and page.js file.
+
+## SECTION 27 - React Server Components
+---
+
+Again, I skipped this section and will revisit later when I have more time.
+
+You can mark some scripts as client rather than server components using 'use client'
+

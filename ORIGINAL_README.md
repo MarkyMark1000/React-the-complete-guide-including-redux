@@ -3972,3 +3972,39 @@ Again, I skipped this section and will revisit later when I have more time.
 
 You can mark some scripts as client rather than server components using 'use client'
 
+## SECTION 27 - Animations
+---
+
+
+
+#### css transform
+---
+
+As a basics of css animations, he animates challenge-item-details-icon within the index.css file.
+It is a tiny arrow that he wants to rotate once you have added a challenge and click the 'View Details' arrow.
+
+The css is already animated:
+```
+.challenge-item-details.expanded .challenge-item-details-icon {
+  transform: rotate(180deg);
+}
+```
+However the code doesn't add the 'expanded' class so this needed to be added to get it to
+actually rotate:
+```
+<div className="challenge-item-details">    is changed to:
+<div className={`challenge-item-details ${isExpanded ? 'expanded' : '' }`}>
+```
+
+He then adjusts the css of the challenge-item-details calss to make the tranformation animated
+and slow:
+```
+transition: transform 0.3s ease-out;
+```
+
+#### css animations
+---
+
+If you have something like a modal that is not initially part of the dom, you can't
+transform it because it isn't initally there, but you can animate it.
+
